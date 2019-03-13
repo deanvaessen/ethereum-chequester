@@ -1,0 +1,120 @@
+@import "./variables.scss";
+@import "./mixins.scss";
+
+.btn {
+  @include box-shadow($shadow-subtler);
+  z-index: 2;
+}
+
+input {
+  @include box-shadow($shadow-sharp-subtle);
+}
+
+.searchSelect {
+  @include box-shadow($shadow-sharp-subtle);
+
+  div {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  input {
+    box-shadow: none;
+  }
+
+  input:hover {
+    box-shadow: none;
+  }
+}
+
+.insufficient-balance {
+  background-color: $app-red-lighterest !important;
+}
+
+#cheque-overview {
+  @include box-shadow($shadow-sharp-subtle);
+
+  .btn,
+  input {
+    box-shadow: none;
+  }
+}
+
+.input-group-prepend,
+.input-group-append {
+  .btn-outline-secondary {
+    @include box-shadow($shadow-sharp-subtle);
+  }
+}
+
+.btn:hover,
+input:hover,
+searchSelect:hover {
+  @include box-shadow($shadow-hover);
+}
+
+// PRIMARY
+.btn.btn-primary:disabled {
+  background-color: $app-main-light;
+  border-color: darken($app-main-light, 1%);
+}
+
+.btn-primary {
+  background-color: $app-main;
+  border-color: darken($app-main, 1%);
+}
+
+.btn-primary:hover {
+  background-color: $app-main-dark;
+  border-color: darken($app-main-dark, 1%);
+}
+
+.btn.btn-primary:active {
+  box-shadow: 0 0 0 0.2rem $app-main-lightest !important;
+}
+.btn.btn-primary:focus {
+  box-shadow: 0 0 0 0.2rem $app-main-lightest !important;
+}
+
+// PRIMARY - OUTLINED
+.btn-outline-primary {
+  border-color: darken($app-main, 1%);
+  color: $app-main;
+}
+
+.btn-outline-primary:hover {
+  background-color: $app-main-dark;
+  border-color: darken($app-main-dark, 1%);
+}
+
+// SECONDARY
+.btn.btn-secondary:disabled {
+  background-color: $app-secondary-light;
+  border-color: darken($app-secondary-light, 1%);
+}
+
+.btn-secondary {
+  background-color: $app-secondary;
+  border-color: darken($app-secondary, 1%);
+}
+
+.btn-secondary:hover {
+  background-color: $app-secondary-dark;
+  border-color: darken($app-secondary-dark, 1%);
+}
+
+// DANGER
+.btn.btn-danger:disabled {
+  background-color: $app-red-lighter;
+  border-color: darken($app-red-lighter, 1%);
+}
+
+.btn-danger {
+  background-color: $app-red;
+  border-color: darken($app-red, 1%);
+}
+
+.btn-danger:hover {
+  background-color: $app-red-dark;
+  border-color: darken($app-red-dark, 1%);
+}

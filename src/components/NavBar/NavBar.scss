@@ -1,0 +1,25 @@
+@import "../../styles/variables.scss";
+@import "../../styles/mixins.scss";
+
+.navbar {
+  padding: 0;
+  padding-left: 1%;
+  padding-right: 1%;
+  background-color: $ethereum-light;
+  //box-shadow: 0 3px 4px rgba(0, 0, 0, 0.07), 0 3px 4px rgba(0, 0, 0, 0.07);
+  //box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  @include box-shadow($shadow-sharp);
+
+  a,
+  a:hover {
+    text-decoration: none;
+  }
+
+  a {
+    color: lightgrey;
+  }
+
+  a:hover {
+    color: grey;
+  }
+}

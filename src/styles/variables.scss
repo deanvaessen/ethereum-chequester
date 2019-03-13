@@ -1,0 +1,79 @@
+@import "./mixins.scss";
+
+// ETHEREUM
+$white: #f9f9f9;
+$ethereum-white: #ffffff;
+$ethereum-light: #ecf0f1;
+$ethereum-grey: #3c3c3d;
+$ethereum-gold: #c99d66;
+
+// 6 shades lighter = {lightest}
+// 4 shades lighter = {light}
+// 2 shades lighter = {lighter}
+// base colour = {main}
+// 2 shades darker = {darker}
+// 4 shades darker = {dark}
+// 6 shades darker = {darkest}
+
+// MAIN
+$app-main: #4959d4;
+
+$app-main-lightest: lighten($app-main, 15%);
+$app-main-light: lighten($app-main, 10%);
+$app-main-lighter: lighten($app-main, 5%);
+$app-main-darker: darken($app-main, 5%);
+$app-main-dark: darken($app-main, 15%);
+$app-main-darkest: darken($app-main, 10%);
+
+/* -- Manual
+$app-main-lightest: #acb3eb;
+$app-main-light: #8b95e3;
+$app-main-lighter: #6a77db;
+$app-main: #4959d4;
+$app-main-darker: #3c49ae;
+$app-main-dark: #2f3987;
+$app-main-darkest: #222961;
+*/
+
+// SECONDARY
+$app-secondary: #f6851b;
+
+$app-secondary-lightest: lighten($app-secondary, 15%);
+$app-secondary-light: lighten($app-secondary, 10%);
+$app-secondary-lighter: lighten($app-secondary, 5%);
+$app-secondary-darker: darken($app-secondary, 5%);
+$app-secondary-dark: darken($app-secondary, 15%);
+$app-secondary-darkest: darken($app-secondary, 10%);
+
+// RED
+$app-red-lighterest: #fddbdf; //Great naming...
+$app-red-lightest: #fca6af;
+$app-red-light: #fb838f;
+$app-red-lighter: #fa606f;
+$app-red: #f93d4f;
+$app-red-darker: #cc3241;
+$app-red-dark: #9f2733;
+$app-red-darkest: #721c24;
+
+// Came from ethereum-gold base colour
+//HIGHLIGHT
+$highlight: #f5ede3;
+$highlight-darker: #ebdbc7;
+$highlight-dark: #e1c9ab;
+$highlight-darkest: #d7b78f;
+
+$shadow-sharp-subtle: 0 0px 4px rgba(0, 0, 0, 0.12),
+  0 4px 4px rgba(0, 0, 0, 0.1);
+$shadow-subtler: 0 1px 3px rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-sharp: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-sharp-dark: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+$shadow-hover: 0 5px 9px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.05);
+
+/*
+$shadow-hover-pronounced: 0 7px 14px rgba(0, 0, 0, 0.2),
+  0 5px 5px rgba(0, 0, 0, 0.05);
+*/
+
+$shadow-alt: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-alt-hover: 0 5px 11px rgba(0, 0, 0, 0.15), 0 5px 5px rgba(0, 0, 0, 0.05);

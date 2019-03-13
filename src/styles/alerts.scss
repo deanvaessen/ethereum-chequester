@@ -1,0 +1,9 @@
+@import "./variables.scss";
+
+.alert-danger {
+  background-colour: $app-red-lighterest;
+}
+
+.alert:hover {
+  cursor: pointer;
+}
