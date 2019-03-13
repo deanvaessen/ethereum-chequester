@@ -1,0 +1,12 @@
+// Usage:
+/*
+    @include box-shadow(2px 2px 2px rgba(#ccc, .8), -2px -2px 2px rgba(#ccc, 0.8)) ;
+    $shadow-color: red;  // could also be a hex (like #F9F8F6) type color
+    @include box-shadow(0 2px 2px rgba($shadow-color, .9));
+
+*/
+@mixin box-shadow($shadow...) {
+  -webkit-box-shadow: $shadow;
+  -moz-box-shadow: $shadow;
+  box-shadow: $shadow;
+}

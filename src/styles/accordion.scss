@@ -1,0 +1,58 @@
+@import "./variables.scss";
+@import "./mixins.scss";
+
+// ACCORDION
+.accordion {
+  border-color: $highlight;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  //border-bottom-width: 5px;
+  //transition: box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  //transition: box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 0.2);
+  //box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  @include box-shadow($shadow-sharp-subtle);
+  //transition: box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.accordion:hover {
+  //border-color: $highlight-darker;
+  background-color: $highlight-darker;
+
+  .accordion__title {
+    border-color: $highlight-darker;
+    background-color: $highlight-darker;
+  }
+
+  .accordion__body {
+    //background-color: $highlight-darker;
+  }
+}
+
+.accordion:hover {
+  //box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  //box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1), 0 5px 5px rgba(0, 0, 0, 0.01);
+  //box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2), 0 5px 5px rgba(0, 0, 0, 0.17);
+  //box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2), 0 5px 5px rgba(0, 0, 0, 0.05);
+  @include box-shadow($shadow-hover);
+}
+
+.accordion__body {
+  padding-bottom: 2rem;
+  background-color: lighten($highlight, 3%);
+
+  .btn-outline-secondary {
+    background-color: white;
+  }
+}
+
+.accordion__title {
+  background-color: $highlight;
+}
+
+.accordion__title:hover {
+  border-color: $highlight-darker;
+  background-color: $highlight-darker;
+}

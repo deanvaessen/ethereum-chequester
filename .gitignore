@@ -1,0 +1,19 @@
+# Don't check auto-generated stuff into git
+coverage
+build
+node_modules
+_node_modules
+stats.json
+
+# Cruft
+.DS_Store
+npm-debug.log
+.idea
+
+# Logs
+yarn-error.log
+
+.jest
+
+test_account.txt
+test_cheque.json

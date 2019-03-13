@@ -1,0 +1,10 @@
+@import "../../styles/variables.scss";
+@import "../../styles/mixins.scss";
+
+.chequeUploader {
+  background: $ethereum-light; //rgb(235, 252, 255); //rgb(244, 237, 246)
+  height: 220px;
+  border: 1px dashed gray;
+
+  @include box-shadow($shadow-sharp-subtle);
+}

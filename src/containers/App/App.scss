@@ -1,0 +1,57 @@
+//@import url(https://fonts.googleapis.com/css?family=Raleway);
+@import "../../styles/variables.scss";
+@import "../../styles/buttons.scss";
+@import "../../styles/accordion.scss";
+@import "../../styles/alerts.scss";
+@import "../../styles/mixins.scss";
+
+.app-wrapper {
+  margin: 0 auto;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.alert-spacer {
+  margin-top: 1.5rem !important;
+}
+
+body {
+  background: $app-main;
+  font-size: 16px;
+  font-family: "Roboto", sans-serif;
+}
+
+/*
+a:hover {
+  text-decoration: none;
+  color: black;
+}
+
+a {
+  color: black;
+}
+
+a {
+  outline: 0;
+}
+*/
+
+.alert-small {
+  font-size: 12px;
+}
+
+.delay-05s {
+  animation-delay: 0.5s;
+}
+
+.flex-centre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-expand {
+  flex: 1 1 auto;
+}
