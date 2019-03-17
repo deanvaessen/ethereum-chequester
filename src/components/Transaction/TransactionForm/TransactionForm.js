@@ -2,111 +2,73 @@ import { Fragment } from "react";
 import PropTypes from "prop-types";
 import { Form, Col, InputGroup, Row, Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import AlertMessage from "../../components/AlertMessage";
-import Page from "../../components/Page";
-import ActionButtons from "../../components/ActionButtons";
-import EthereumLoadingIndicator from "../../components/EthereumLoadingIndicator";
+import AlertMessage from "../../AlertMessage";
+import Page from "../../Page";
+import ActionButtons from "../../ActionButtons";
+import EthereumLoadingIndicator from "../../EthereumLoadingIndicator";
 
-export default class FundChequeBook extends React.Component {
+export default class TransactionForm extends React.Component {
     static propTypes = {
-        ethereumInterface : PropTypes.object.isRequired,
-        getCurrentChequeBooks : PropTypes.func.isRequired,
-        contract : PropTypes.string.isRequired
+        makeDeposit : PropTypes.func.isRequired,
+        receiverAddress : PropTypes.string,
+        receiverType : PropTypes.string,
+        icon : PropTypes.string.isRequired,
+        amountDescription : PropTypes.string.isRequired,
+        successText : PropTypes.string.isRequired,
+        actionButtonText : PropTypes.string.isRequired,
+        error : PropTypes.string,
+        moneyHasBeenDeposited : PropTypes.bool.isRequired,
+        isInteractionWithEthereum : PropTypes.bool.isRequired,
+        metaMaskPromptIsAvailable : PropTypes.bool.isRequired
     };
 
     initialState = {
-        error : null,
-        moneyHasBeenDeposited : false,
-        amount : "",
-        isInteractionWithEthereum : false,
-        metaMaskPromptIsAvailable : false
+        amount : ""
     };
 
     state = this.initialState;
 
-    componentDidMount() {
-        this.addListeners();
-    }
-
-    addListeners = () => {
-        window.addEventListener( "deposit.shouldApprove", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : true
-            } );
-        } );
-
-        window.addEventListener( "deposit.hasApproved", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : false
-            } );
-        } );
-    };
-
-    makeDeposit = () => {
-        const { getCurrentChequeBooks, ethereumInterface, contract } = this.props;
-        const { amount } = this.state;
-        const etherScanDelay = 5000; // @TODO: this is really stupid, but serves as a temporary quick hack to prevent an issue where there is a delay between transaction completion and when the result is available/queryable on Etherscan
-
-        this.setState( {
-            moneyHasBeenDeposited : false,
-            isInteractionWithEthereum : true
-        } );
-
-        ethereumInterface
-            .depositIntoChequeBook( contract, amount )
-            .then( result => {
-                setTimeout( () => {
-                    getCurrentChequeBooks( () => {
-                        this.setState( {
-                            moneyHasBeenDeposited : true,
-                            isInteractionWithEthereum : false
-                        } );
-                    } );
-                }, etherScanDelay );
-            } )
-            .catch( error =>
-                this.setState( {
-                    isInteractionWithEthereum : false,
-                    metaMaskPromptIsAvailable : false,
-                    moneyHasBeenDeposited : false,
-                    error : error.message
-                } )
-            );
-    };
-
     getRequestApproval = () => {
-        const { contract } = this.props;
+        const { receiverAddress } = this.props;
 
         const { error, amount, isInteractionWithEthereum, metaMaskPromptIsAvailable } = this.state;
         const isLocked =
-            error || isInteractionWithEthereum || metaMaskPromptIsAvailable || !contract || !amount;
+            error || isInteractionWithEthereum || metaMaskPromptIsAvailable || !receiverAddress || !amount;
 
         return !isLocked;
     };
 
     render() {
-        const { contract } = this.props;
+        const {
+            amount
+        } = this.state;
 
         const {
             error,
-            amount,
+            receiverAddress,
+            makeDeposit,
+            receiverType,
+            icon,
+            amountDescription,
+            successText,
+            actionButtonText,
             moneyHasBeenDeposited,
             isInteractionWithEthereum,
-            metaMaskPromptIsAvailable
-        } = this.state;
+            metaMaskPromptIsAvailable,
+        } = this.props;
+
+        const capitalisedReceiver = receiverType.charAt( 0 ).toUpperCase() + receiverType.slice( 1 );
         const requestIsPrimed = true;
 
         return (
             <Fragment>
-                {/*<h2 className="mt-2 mb-2">Fund cheque book</h2>*/}
-
                 <h5 className="mt-2">Transaction details</h5>
                 <hr className="mt-2 mb-2" />
 
                 <Form className="w-100 m-0 mt-2">
                     <Form.Row className="mt-2">
                         <Form.Group as={Col} md="12">
-                            <Form.Label>Contract address</Form.Label>
+                            <Form.Label>{`${capitalisedReceiver} address`}</Form.Label>
                             <InputGroup>
                                 <InputGroup.Prepend>
                                     <Button
@@ -115,18 +77,18 @@ export default class FundChequeBook extends React.Component {
                                     >
                                         <FontAwesomeIcon
                                             style={{ marginRight : "4px", marginLeft : "4px" }}
-                                            icon="file-contract"
+                                            icon={icon}
                                         />
                                     </Button>
                                 </InputGroup.Prepend>
                                 <Form.Control
                                     type="text"
                                     disabled={true}
-                                    aria-label="Contract address"
-                                    placeholder="Select a cheque book first"
+                                    aria-label={`${capitalisedReceiver} address`}
+                                    placeholder={ `Select a ${receiverType} first` }
                                     aria-describedby="basic-addon2"
-                                    name="Contract Address"
-                                    value={contract}
+                                    name={`${capitalisedReceiver} address`}
+                                    value={receiverAddress}
                                     onChange={() => {}}
                                 />
                             </InputGroup>
@@ -135,7 +97,7 @@ export default class FundChequeBook extends React.Component {
 
                     <Form.Row className="">
                         <Form.Group as={Col} md="12">
-                            <Form.Label>Amount to deposit</Form.Label>
+                            <Form.Label>{amountDescription}</Form.Label>
                             <InputGroup>
                                 <InputGroup.Prepend>
                                     <Button variant="outline-secondary">
@@ -150,8 +112,8 @@ export default class FundChequeBook extends React.Component {
                                 </InputGroup.Prepend>
                                 <Form.Control
                                     type="text"
-                                    aria-label="Amount of ETH to deposit"
-                                    placeholder="Add the amount of ETH to deposit"
+                                    aria-label="Amount of ETH for the transaction"
+                                    placeholder="Add the amount of ETH for the transaction"
                                     aria-describedby="basic-addon2"
                                     name="Deposit amount"
                                     value={amount}
@@ -169,11 +131,11 @@ export default class FundChequeBook extends React.Component {
                 {requestIsPrimed && (
                     <Row className="mt-4 ml-0 mr-0">
                         <ActionButtons
-                            handleConfirmation={this.makeDeposit}
+                            handleConfirmation={() => makeDeposit( amount )}
                             handleAbort={() => this.setState( this.initialState )}
                             variantConfirmation="primary"
                             variantAbort="danger"
-                            confirmationLabel="Deposit funds"
+                            confirmationLabel={actionButtonText}
                             abortLabel="Reset"
                             confirmationIcon={[ "fab", "ethereum" ]}
                             abortIcon="undo"
@@ -208,7 +170,7 @@ export default class FundChequeBook extends React.Component {
                         <AlertMessage
                             style={{ width : "100%" }}
                             intro="All good!"
-                            message="Your ETH has been deposited into the contract."
+                            message={successText}
                             icon="check-circle"
                             variant="success"
                             dismissible={true}

@@ -5,12 +5,14 @@ export default class ChequeBook {
      * @param {object} web3 - Intialised web3
      * @param {object} solCompiler - Initialised solCompiler middleware
      * @param {object} path - Path npm module
+     * @param {object} transactions - A helper class with shared functions
      * @param {string} contract - The address of the contract on the blockchain
      */
-    constructor( solCompiler, web3, path, contract ) {
+    constructor( solCompiler, web3, path, transactions, contract ) {
         this.solCompiler = solCompiler;
         this.web3 = web3;
         this.path = path;
+        this.transactions = transactions;
         this.contract = contract;
     }
 
@@ -114,26 +116,7 @@ export default class ChequeBook {
      * @param {string} amount - Amount of ETH to deposit into the cheque book
      */
     deposit = amount => {
-        const amountInWei = this.web3.utils.toWei( amount.toString(), "ether" );
-
-        return this.web3.eth
-            .getAccounts()
-            .then( accounts => {
-                window.dispatchEvent( new Event( "deposit.shouldApprove" ) );
-
-                return accounts[0];
-            } )
-            .then( account => {
-                return this.web3.eth
-                    .sendTransaction( {
-                        from : account,
-                        to : this.contract,
-                        value : amountInWei
-                    } )
-                    .on( "transactionHash", transactionHash => {
-                        window.dispatchEvent( new Event( "deposit.hasApproved" ) );
-                    } );
-            } );
+        return this.transactions.deposit( amount, this.contract );
     };
 
     /**

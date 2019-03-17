@@ -5,9 +5,11 @@ import Async from "react-select/lib/Async";
 import Select from "react-select";
 import { Fragment } from "react";
 import Creatable from "react-select/lib/Creatable";
-import FundChequeBook from "../../containers/FundChequeBook";
+import fundChequeBook from "../Transaction/fundChequeBook";
+import Transaction from "../Transaction";
+import directTransaction from "../Transaction/directTransaction";
 import AlertMessage from "../AlertMessage";
-import RequestChequeBook from "../../containers/RequestChequeBook";
+import RequestChequeBook from "../RequestChequeBook";
 
 import {
     Accordion,
@@ -28,7 +30,7 @@ export default class ChequeForm extends React.Component {
         //updateCurrentBalance : PropTypes.func.isRequired,
         getCurrentChequeBooks : PropTypes.func.isRequired,
         hasIssuedChequeBefore : PropTypes.bool.isRequired,
-        previousTotal : PropTypes.number,
+        previousTotal : PropTypes.string,
         handleContractChange : PropTypes.func.isRequired,
         handleAmountChange : PropTypes.func.isRequired,
         ChequeUploader : PropTypes.func.isRequired,
@@ -37,6 +39,7 @@ export default class ChequeForm extends React.Component {
 
     initialState = {
         invalidAddressWarning : null,
+        directTransferAccordionIsOpen : false,
         fundingAccordionIsOpen : false
     };
 
@@ -112,22 +115,25 @@ export default class ChequeForm extends React.Component {
     };
 
     getFundAccordionClasses = () => {
-        const { fundingAccordionIsOpen } = this.state;
+        const { fundingAccordionIsOpen, directTransferAccordionIsOpen } = this.state;
         const baseStyles = "mt-4 mb-0";
+
+        return baseStyles;
+
         const insufficientBalanceStyles =
-            this.balanceIsInsufficient() && !fundingAccordionIsOpen
+            this.balanceIsInsufficient() && !fundingAccordionIsOpen && !directTransferAccordionIsOpen
                 ? "animated bounce infinite slow"
                 : "";
 
         return `${baseStyles} ${insufficientBalanceStyles}`;
     };
 
-    getFundAccordionTitleClasses = () => {
-        const { fundingAccordionIsOpen } = this.state;
+    getFundingAccordionTitleClasses = () => {
+        const { fundingAccordionIsOpen, directTransferAccordionIsOpen } = this.state;
 
         const baseStyles = "accordion__title";
         const insufficientBalanceStyles =
-            this.balanceIsInsufficient() && !fundingAccordionIsOpen ? "insufficient-balance" : "";
+            this.balanceIsInsufficient() && !fundingAccordionIsOpen && !directTransferAccordionIsOpen ? "call-to-action" : "";
 
         return `${baseStyles} ${insufficientBalanceStyles}`;
     };
@@ -150,7 +156,7 @@ export default class ChequeForm extends React.Component {
             ethereumInterface,
             handleBeneficiaryChange
         } = this.props;
-        const { invalidAddressWarning, fundingAccordionIsOpen } = this.state;
+        const { invalidAddressWarning, fundingAccordionIsOpen, directTransferAccordionIsOpen } = this.state;
 
         return (
             <Fragment>
@@ -328,12 +334,17 @@ export default class ChequeForm extends React.Component {
                             >
                                 <AccordionItem expanded={fundingAccordionIsOpen}>
                                     <AccordionItemTitle
-                                        className={this.getFundAccordionTitleClasses()}
-                                        onClick={() =>
-                                            this.setState( prevState => ( {
-                                                fundingAccordionIsOpen : !prevState.fundingAccordionIsOpen
-                                            } ) )
-                                        }
+                                        className={this.getFundingAccordionTitleClasses()}
+                                        onClick={() => {
+                                            this.setState( prevState => {
+                                                const willOpen = !prevState.fundingAccordionIsOpen;
+
+                                                return {
+                                                    directTransferAccordionIsOpen : willOpen ? false : prevState.directTransferAccordionIsOpen,
+                                                    fundingAccordionIsOpen : !prevState.fundingAccordionIsOpen
+                                                };
+                                            } );
+                                        }}
                                     >
                                         <h6 className="u-position-relative">
                                             <FontAwesomeIcon
@@ -348,11 +359,62 @@ export default class ChequeForm extends React.Component {
                                         </h6>
                                     </AccordionItemTitle>
                                     <AccordionItemBody>
-                                        <FundChequeBook
+                                        <Transaction
+                                            successText="Your ETH has been deposited into the contract"
+                                            icon="file-contract"
+                                            receiverType="contract"
+                                            amountDescription="Amount to deposit"
+                                            actionButtonText="Deposit funds"
+                                            makeDeposit={fundChequeBook}
                                             getCurrentChequeBooks={getCurrentChequeBooks}
                                             ethereumInterface={ethereumInterface}
-                                            contract={contract}
-                                            preFilledBeneficiary={beneficiary}
+                                            receiverAddress={contract}
+                                        />
+                                    </AccordionItemBody>
+                                </AccordionItem>
+                            </Accordion>
+
+                            <Accordion
+                                className="mt-4 mb-0"
+                                style={{ width : "100%" }}
+                            >
+                                <AccordionItem expanded={directTransferAccordionIsOpen}>
+                                    <AccordionItemTitle
+                                        className={this.getFundingAccordionTitleClasses()}
+                                        onClick={() => {
+                                            this.setState( prevState => {
+                                                const willOpen = !prevState.directTransferAccordionIsOpen;
+
+                                                return {
+                                                    directTransferAccordionIsOpen : !prevState.directTransferAccordionIsOpen,
+                                                    fundingAccordionIsOpen : willOpen ? false : prevState.fundingAccordionIsOpen
+                                                };
+                                            } );
+                                        }}
+                                    >
+                                        <h6 className="u-position-relative">
+                                            <FontAwesomeIcon
+                                                icon={[ "fab", "ethereum" ]}
+                                                style={{
+                                                    marginRight : "5px"
+                                                }}
+                                                className="mr-2"
+                                            />
+                                            Make direct payment
+                                            <div className="accordion__arrow" role="presentation" />
+                                        </h6>
+                                    </AccordionItemTitle>
+                                    <AccordionItemBody>
+                                        <Transaction
+                                            successText="Your ETH has been transfered to the beneficiary's account"
+                                            icon="user"
+                                            receiverType="beneficiary"
+                                            amountDescription="Amount to transfer"
+                                            actionButtonText="Transfer funds"
+                                            makeDeposit={directTransaction}
+                                            getCurrentChequeBooks={getCurrentChequeBooks}
+                                            ethereumInterface={ethereumInterface}
+                                            receiverAddress={beneficiary}
                                         />
                                     </AccordionItemBody>
                                 </AccordionItem>

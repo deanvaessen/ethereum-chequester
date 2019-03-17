@@ -126,13 +126,14 @@ const history = createHashHistory();
 const MOUNT_NODE = document.getElementById("app");
 
 // The app
-import App from "./containers/App";
+import App from "./components/App";
 
 // Middleware
 import solc from "browser-solc";
 import path from "path";
 import Web3 from "web3";
 import ChequeBook from "./middleware/cheque_book";
+import Transactions from "./middleware/transactions";
 import Cheque from "./middleware/cheque";
 import SolCompiler from "./middleware/sol_compiler";
 import Etherscan from "./middleware/etherscan";
@@ -181,6 +182,7 @@ function loadReact() {
         config,
         Etherscan,
         ChequeBook,
+        Transactions,
         Cheque,
         path,
         utils

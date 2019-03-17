@@ -16,15 +16,23 @@ export default class EthereumInterface {
      */
     constructor( dependencies ) {
         this.web3 = dependencies.web3;
+        this.path = dependencies.path;
         this.utils = dependencies.utils;
+        this.Etherscan = dependencies.Etherscan;
+        this.transactions = new dependencies.Transactions( this.web3, this.path );
         this.ChequeBook = dependencies.ChequeBook;
         this.Cheque = dependencies.Cheque;
-        this.Etherscan = dependencies.Etherscan;
         this.solCompiler = dependencies.solCompiler;
-        this.path = dependencies.path;
         this.config = dependencies.config;
     }
 
+    /**
+     * Verifies if an ethereum address is valid
+     *
+     * @param {string} address - The address in question
+     *
+     * @memberof EthereumInterface
+     */
     addressIsValid = address => this.utils.addressIsValid( address );
 
     metaMaskIsLoaded = () => this.utils.metaMaskIsLoaded();
@@ -45,23 +53,33 @@ export default class EthereumInterface {
      * @memberof EthereumInterface
      */
     requestChequeBook = alias => {
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path );
+        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions );
 
         return chequeBook.request( alias );
     };
 
     /**
      * Deposits ETH into a cheque book
-     * @param {string} contract - Ethereum address of the cheque book contract
      * @param {string} amount - Amount of eth
+     * @param {string} contract - Ethereum address of the cheque book contract
      *
      * @memberof EthereumInterface
      */
-    depositIntoChequeBook = ( contract, amount ) => {
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, contract );
+    depositIntoChequeBook = ( amount, contract ) => {
+        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions, contract );
 
         return chequeBook.deposit( amount );
     };
+
+    /**
+     * Sends ETH funds to a receiver
+     *
+     * @param {string} amount - Amount of ETH to be sent
+     * @param {string} receiverAddress - Receiver address to send the amount to
+     */
+    sendFunds = ( amount, receiverAddress ) => {
+        return this.transactions.deposit( amount, receiverAddress );
+    }
 
     /**
      * Gets all the cheque books for a user
@@ -71,7 +89,7 @@ export default class EthereumInterface {
      */
     getUserChequeBooks = account => {
         const { ETHERSCAN_API_KEY, ETHERSCAN_NETWORK } = this.config;
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path );
+        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions );
         const etherscan = new this.Etherscan( ETHERSCAN_NETWORK, ETHERSCAN_API_KEY );
 
         return new Promise( async ( resolve, reject ) => {
@@ -142,7 +160,7 @@ export default class EthereumInterface {
      * @memberof EthereumInterface
      */
     cashCheque = ( contract, beneficiary, amount, previousTotal, signature ) => {
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path );
+        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions );
         const cheque = new this.Cheque(
             this.web3,
             this.utils,
