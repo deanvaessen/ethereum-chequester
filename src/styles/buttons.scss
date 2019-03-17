@@ -31,6 +31,10 @@ input {
   background-color: $app-red-lighterest !important;
 }
 
+.call-to-action {
+  background-color: $app-main-lightest !important;
+}
+
 #cheque-overview {
   @include box-shadow($shadow-sharp-subtle);
 

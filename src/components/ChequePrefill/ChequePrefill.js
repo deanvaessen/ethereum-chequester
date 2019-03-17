@@ -4,7 +4,7 @@ import { Row } from "react-bootstrap";
 import FormSpacer from "../FormSpacer";
 import ChequebookOverview from "../ChequebookOverview";
 import ChequeUploader from "../ChequeUploader";
-import RequestChequeBook from "../../containers/RequestChequeBook";
+import RequestChequeBook from "../RequestChequeBook";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {

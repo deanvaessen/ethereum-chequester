@@ -71,7 +71,6 @@ export default class App extends React.Component {
         this.monitorMetaMask();
 
         if ( currentEthereumAddress ) {
-            //return; // temp
             this.getCurrentChequeBooks();
             this.getCurrentBeneficiaries();
         } else {
@@ -278,7 +277,6 @@ export default class App extends React.Component {
                 currentChequeBooks : []
             } );
         } else if ( shouldCheckForChequeBooks ) {
-            //return; // temp;
             this.getCurrentChequeBooks();
             //this.getCurrentBeneficiaries(); //@TODO: Does not pull from Ethereum yet
         }
@@ -343,24 +341,6 @@ export default class App extends React.Component {
                             </Row>
                         )}
                         <Switch location={history.location}>
-                            {/*
-                                <Route
-                                    exact
-                                    path="/"
-                                    render={() => (
-                                        <Dashboard
-                                            currentEthereumAddress={currentEthereumAddress}
-                                            ethereumInterface={ethereumInterface}
-                                            activeChequeBook={activeChequeBook}
-                                            currentChequeBooks={currentChequeBooks}
-                                            etherscanError={etherscanError}
-                                            selectChequeBook={this.selectChequeBook}
-                                            getCurrentChequeBooks={this.getCurrentChequeBooks}
-                                        />
-                                    )}
-                                />
-                            */}
-
                             <Route
                                 exact
                                 path="/"
@@ -373,7 +353,6 @@ export default class App extends React.Component {
                                         currentChequeBooks={currentChequeBooks}
                                         etherscanError={etherscanError}
                                         activeChequeBook={activeChequeBook}
-                                        //updateCurrentBalance={this.updateCurrentBalance}
                                         selectChequeBook={this.selectChequeBook}
                                         getCurrentChequeBooks={this.getCurrentChequeBooks}
                                         currentBeneficiaries={currentBeneficiaries}
