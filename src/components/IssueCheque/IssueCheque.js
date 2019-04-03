@@ -38,7 +38,9 @@ import {
 export default class IssueCheque extends React.Component {
     static propTypes = {
         activeChequeBook : PropTypes.string.isRequired,
-        activeBalance : PropTypes.string.isRequired,
+        activeChequeBookBalance : PropTypes.string.isRequired,
+        activeBeneficiaryBalance : PropTypes.string.isRequired,
+        isFetchingChequeBooks : PropTypes.bool.isRequired,
         activeBeneficiary : PropTypes.string.isRequired,
         ethereumInterface : PropTypes.object.isRequired,
         etherscanError : PropTypes.string,
@@ -181,15 +183,15 @@ export default class IssueCheque extends React.Component {
     };
 
     getRequestApproval = () => {
-        const { activeBeneficiary, activeChequeBook, activeBalance } = this.props;
+        const { activeBeneficiary, activeChequeBook, activeChequeBookBalance } = this.props;
         const { signedCheque, amount, previousTotal } = this.state;
         const formIsFilled =
             activeBeneficiary &&
             activeChequeBook &&
             amount &&
             previousTotal &&
-            activeBalance &&
-            activeBalance >= Number( amount );
+            activeChequeBookBalance &&
+            Number( activeChequeBookBalance ) >= Number( amount );
         const isLocked = signedCheque || !formIsFilled;
 
         return !isLocked;
@@ -238,10 +240,12 @@ export default class IssueCheque extends React.Component {
             selectChequeBook,
             activeChequeBook,
             //updateCurrentBalance,
-            activeBalance,
+            activeChequeBookBalance,
             currentBeneficiaries,
             activeBeneficiary,
             selectBeneficiary,
+            activeBeneficiaryBalance,
+            isFetchingChequeBooks,
             getCurrentBeneficiaries,
             TEST_BENEFICIARY
             //TEST_CONTRACT,
@@ -288,12 +292,13 @@ export default class IssueCheque extends React.Component {
                             <Fragment>
                                 <ChequeForm
                                     contract={activeChequeBook}
-                                    activeBalance={activeBalance}
+                                    activeChequeBookBalance={activeChequeBookBalance}
                                     currentBeneficiaries={currentBeneficiaries}
                                     beneficiary={activeBeneficiary}
                                     currentChequeBooks={currentChequeBooks}
                                     ethereumInterface={ethereumInterface}
                                     selectChequeBook={selectChequeBook}
+                                    activeBeneficiaryBalance={activeBeneficiaryBalance}
                                     amount={amount}
                                     //updateCurrentBalance={updateCurrentBalance}
                                     hasIssuedChequeBefore={hasIssuedChequeBefore}
@@ -302,6 +307,7 @@ export default class IssueCheque extends React.Component {
                                     getCurrentChequeBooks={getCurrentChequeBooks}
                                     handleAmountChange={this.handleAmountChange}
                                     handleBeneficiaryChange={selectBeneficiary}
+                                    isFetchingChequeBooks={isFetchingChequeBooks}
                                     ChequeUploader={() => (
                                         <ChequeUploader
                                             ethereumInterface={ethereumInterface}

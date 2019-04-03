@@ -7,6 +7,7 @@ export default class Transaction extends React.Component {
         ethereumInterface : PropTypes.object.isRequired,
         getCurrentChequeBooks : PropTypes.func.isRequired,
         makeDeposit : PropTypes.func.isRequired,
+        transactionDescription : PropTypes.string,
         receiverAddress : PropTypes.string,
         receiverType : PropTypes.string,
         icon : PropTypes.string.isRequired,
@@ -50,6 +51,7 @@ export default class Transaction extends React.Component {
             receiverType,
             icon,
             amountDescription,
+            transactionDescription,
             successText,
             actionButtonText
         } = this.props;
@@ -70,6 +72,7 @@ export default class Transaction extends React.Component {
                 moneyHasBeenDeposited={moneyHasBeenDeposited}
                 receiverType={receiverType}
                 icon={icon}
+                transactionDescription={transactionDescription}
                 amountDescription={amountDescription}
                 successText={successText}
                 actionButtonText={actionButtonText}

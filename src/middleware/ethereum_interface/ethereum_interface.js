@@ -58,6 +58,8 @@ export default class EthereumInterface {
         return chequeBook.request( alias );
     };
 
+    getBalance = contractAddress => this.transactions.getBalance( contractAddress );
+
     /**
      * Deposits ETH into a cheque book
      * @param {string} amount - Amount of eth

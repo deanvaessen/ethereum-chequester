@@ -21,6 +21,7 @@ export default class ChequebookOverview extends React.PureComponent {
         if ( etherscanError ) return "undo";
         else return "clock";
     };
+
     getChequeBooksRequestText = ( isLoading, etherscanError ) => {
         if ( isLoading ) return "Requesting...";
         else if ( etherscanError ) return "Retry";

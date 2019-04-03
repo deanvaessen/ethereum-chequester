@@ -13,6 +13,7 @@ export default class TransactionForm extends React.Component {
         receiverAddress : PropTypes.string,
         receiverType : PropTypes.string,
         icon : PropTypes.string.isRequired,
+        transactionDescription : PropTypes.string,
         amountDescription : PropTypes.string.isRequired,
         successText : PropTypes.string.isRequired,
         actionButtonText : PropTypes.string.isRequired,
@@ -50,6 +51,7 @@ export default class TransactionForm extends React.Component {
             receiverType,
             icon,
             amountDescription,
+            transactionDescription,
             successText,
             actionButtonText,
             moneyHasBeenDeposited,
@@ -64,6 +66,8 @@ export default class TransactionForm extends React.Component {
             <Fragment>
                 <h5 className="mt-2">Transaction details</h5>
                 <hr className="mt-2 mb-2" />
+
+                { transactionDescription && <p className="mb-4">{transactionDescription}</p>}
 
                 <Form className="w-100 m-0 mt-2">
                     <Form.Row className="mt-2">
