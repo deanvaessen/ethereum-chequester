@@ -40,4 +40,18 @@ export default class Transactions {
                     } );
             } );
     };
+
+    /**
+     * Gets a balance for a cheque book contract
+     *
+     * @param {string} contractAddress - The Ethereum address for the target contract
+     *
+     * @memberof ChequeBook
+     */
+    getBalance = contractAddress => {
+
+        return this.web3.eth
+            .getBalance( contractAddress )
+            .then( balance => this.web3.utils.fromWei( balance ) );
+    };
 }

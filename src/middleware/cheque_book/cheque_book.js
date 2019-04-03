@@ -41,29 +41,17 @@ export default class ChequeBook {
      * @memberof ChequeBook
      */
     addBalances = chequeBooks => {
+
         return chequeBooks.map( chequeBook => {
             const { contractAddress } = chequeBook;
 
             //prettier-ignore
-            return this.getBalance( contractAddress )
+            return this.transactions.getBalance( contractAddress )
                 .then( balance => ( {
                     ...chequeBook,
                     balance
                 } ) );
         } );
-    };
-
-    /**
-     * Gets a balance for a cheque book contract
-     *
-     * @param {string} contractAddress - The Ethereum address for the target contract
-     *
-     * @memberof ChequeBook
-     */
-    getBalance = contractAddress => {
-        return this.web3.eth
-            .getBalance( contractAddress )
-            .then( balance => this.web3.utils.fromWei( balance ) );
     };
 
     /**

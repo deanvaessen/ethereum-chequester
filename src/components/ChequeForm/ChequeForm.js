@@ -21,10 +21,11 @@ import {
 export default class ChequeForm extends React.Component {
     static propTypes = {
         contract : PropTypes.string.isRequired,
-        activeBalance : PropTypes.string.isRequired,
-        currentBeneficiaries : PropTypes.array,
         beneficiary : PropTypes.string.isRequired,
+        activeChequeBookBalance : PropTypes.string.isRequired,
+        currentBeneficiaries : PropTypes.array,
         amount : PropTypes.string.isRequired,
+        isFetchingChequeBooks : PropTypes.bool.isRequired,
         currentChequeBooks : PropTypes.array,
         selectChequeBook : PropTypes.func.isRequired,
         //updateCurrentBalance : PropTypes.func.isRequired,
@@ -38,12 +39,23 @@ export default class ChequeForm extends React.Component {
     };
 
     initialState = {
+        chequeBookHasInsufficientFunds : false,
+        beneficiaryHasInsufficientFunds : false,
         invalidAddressWarning : null,
-        directTransferAccordionIsOpen : false,
+        directTransactionReason : null,
+        directTransactionAccordionIsOpen : false,
         fundingAccordionIsOpen : false
     };
 
     state = this.initialState;
+
+    componentDidMount() {
+        this.verifyFunds();
+    }
+
+    componentDidUpdate( prevProps, prevState ) {
+        this.verifyFunds();
+    }
 
     getSelectStyles = () => {
         return {
@@ -53,6 +65,27 @@ export default class ChequeForm extends React.Component {
             } )
         };
     };
+
+    verifyFunds = () => {
+        const { activeBeneficiaryBalance, beneficiary } = this.props;
+        const beneficiaryHasInsufficientFunds = !beneficiary || Number( activeBeneficiaryBalance ) > 0 ? false : true;
+        let directTransactionReason = null;
+        let fundingSituationChanged = false;
+
+        if ( beneficiaryHasInsufficientFunds ) {
+            directTransactionReason = "Your beneficiary does not have sufficient funds to pay the transaction fees."
+            + " You may either ignore this warning and proceed, or make a direct transfer.";
+        }
+
+        fundingSituationChanged = this.state.beneficiaryHasInsufficientFunds !== beneficiaryHasInsufficientFunds;
+
+        if ( fundingSituationChanged ) {
+            this.setState( {
+                beneficiaryHasInsufficientFunds,
+                directTransactionReason
+            } );
+        }
+    }
 
     getChequeBookOptions = () => {
         const { currentChequeBooks } = this.props;
@@ -102,10 +135,10 @@ export default class ChequeForm extends React.Component {
         this.setState( { invalidAddressWarning : null }, () => handleBeneficiaryChange( option ) );
     };
 
-    balanceIsInsufficient = () => {
-        const { activeBalance, amount } = this.props;
+    balanceIsInsufficient = ( balance, amount ) => {
+        if ( amount == null ) return true;
 
-        return Number( amount ) > Number( activeBalance );
+        return Number( amount ) > Number( balance );
     };
 
     getAmountInputClasses = () => {
@@ -115,13 +148,13 @@ export default class ChequeForm extends React.Component {
     };
 
     getFundAccordionClasses = () => {
-        const { fundingAccordionIsOpen, directTransferAccordionIsOpen } = this.state;
+        const { fundingAccordionIsOpen, directTransactionAccordionIsOpen } = this.state;
         const baseStyles = "mt-4 mb-0";
 
         return baseStyles;
 
         const insufficientBalanceStyles =
-            this.balanceIsInsufficient() && !fundingAccordionIsOpen && !directTransferAccordionIsOpen
+            this.balanceIsInsufficient() && !fundingAccordionIsOpen && !directTransactionAccordionIsOpen
                 ? "animated bounce infinite slow"
                 : "";
 
@@ -129,11 +162,27 @@ export default class ChequeForm extends React.Component {
     };
 
     getFundingAccordionTitleClasses = () => {
-        const { fundingAccordionIsOpen, directTransferAccordionIsOpen } = this.state;
+        const {
+            fundingAccordionIsOpen,
+            chequeBookHasInsufficientFunds
+        } = this.state;
 
         const baseStyles = "accordion__title";
         const insufficientBalanceStyles =
-            this.balanceIsInsufficient() && !fundingAccordionIsOpen && !directTransferAccordionIsOpen ? "call-to-action" : "";
+            chequeBookHasInsufficientFunds && !fundingAccordionIsOpen ? "call-to-action" : "";
+
+        return `${baseStyles} ${insufficientBalanceStyles}`;
+    };
+
+    getDirectPaymentAccordionTitleClasses = () => {
+        const {
+            directTransactionAccordionIsOpen,
+            beneficiaryHasInsufficientFunds
+        } = this.state;
+
+        const baseStyles = "accordion__title";
+        const insufficientBalanceStyles =
+             beneficiaryHasInsufficientFunds && !directTransactionAccordionIsOpen ? "call-to-action" : "";
 
         return `${baseStyles} ${insufficientBalanceStyles}`;
     };
@@ -151,12 +200,13 @@ export default class ChequeForm extends React.Component {
             selectChequeBook,
             handleContractChange,
             currentBeneficiaries,
+            isFetchingChequeBooks,
             handleAmountChange,
             getCurrentChequeBooks,
             ethereumInterface,
             handleBeneficiaryChange
         } = this.props;
-        const { invalidAddressWarning, fundingAccordionIsOpen, directTransferAccordionIsOpen } = this.state;
+        const { invalidAddressWarning, fundingAccordionIsOpen, directTransactionAccordionIsOpen, directTransactionReason } = this.state;
 
         return (
             <Fragment>
@@ -204,7 +254,7 @@ export default class ChequeForm extends React.Component {
                                 <Select
                                     styles={this.getSelectStyles()}
                                     className="flex-expand searchSelect"
-                                    placeholder="Select a cheque book"
+                                    placeholder={ isFetchingChequeBooks ? "Finding your cheque books, one moment please..." : "Select a cheque book" }
                                     value={this.getChequeBookOptions().find(
                                         option => option.value == contract
                                     )}
@@ -340,7 +390,7 @@ export default class ChequeForm extends React.Component {
                                                 const willOpen = !prevState.fundingAccordionIsOpen;
 
                                                 return {
-                                                    directTransferAccordionIsOpen : willOpen ? false : prevState.directTransferAccordionIsOpen,
+                                                    directTransactionAccordionIsOpen : willOpen ? false : prevState.directTransactionAccordionIsOpen,
                                                     fundingAccordionIsOpen : !prevState.fundingAccordionIsOpen
                                                 };
                                             } );
@@ -378,15 +428,15 @@ export default class ChequeForm extends React.Component {
                                 className="mt-4 mb-0"
                                 style={{ width : "100%" }}
                             >
-                                <AccordionItem expanded={directTransferAccordionIsOpen}>
+                                <AccordionItem expanded={directTransactionAccordionIsOpen}>
                                     <AccordionItemTitle
-                                        className={this.getFundingAccordionTitleClasses()}
+                                        className={this.getDirectPaymentAccordionTitleClasses()}
                                         onClick={() => {
                                             this.setState( prevState => {
-                                                const willOpen = !prevState.directTransferAccordionIsOpen;
+                                                const willOpen = !prevState.directTransactionAccordionIsOpen;
 
                                                 return {
-                                                    directTransferAccordionIsOpen : !prevState.directTransferAccordionIsOpen,
+                                                    directTransactionAccordionIsOpen : !prevState.directTransactionAccordionIsOpen,
                                                     fundingAccordionIsOpen : willOpen ? false : prevState.fundingAccordionIsOpen
                                                 };
                                             } );
@@ -411,6 +461,7 @@ export default class ChequeForm extends React.Component {
                                             receiverType="beneficiary"
                                             amountDescription="Amount to transfer"
                                             actionButtonText="Transfer funds"
+                                            transactionDescription={directTransactionReason}
                                             makeDeposit={directTransaction}
                                             getCurrentChequeBooks={getCurrentChequeBooks}
                                             ethereumInterface={ethereumInterface}

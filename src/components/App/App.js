@@ -38,10 +38,12 @@ export default class App extends React.Component {
         hasCheckedMetaMask : false,
         hasCheckedEtherScan : false,
         shouldRenderSplash : false,
+        isFetchingChequeBooks : false,
         currentChequeBooks : [],
         currentBeneficiaries : [],
         activeChequeBook : "",
-        activeBalance : "0",
+        activeChequeBookBalance : "0",
+        activeBeneficiaryBalance : "0",
         activeBeneficiary : "",
         etherscanError : null
     };
@@ -112,6 +114,8 @@ export default class App extends React.Component {
                             metaMaskError : null,
                             shouldRenderSplash : false
                         } );
+
+
                     } else if ( accountHasLoggedOut ) {
                         this.setState( {
                             hasCheckedMetaMask : true,
@@ -140,6 +144,7 @@ export default class App extends React.Component {
         const { currentEthereumAddress } = this.state;
 
         this.setState( {
+            isFetchingChequeBooks : true,
             currentChequeBooks : [],
             etherscanError : null
         } );
@@ -156,7 +161,7 @@ export default class App extends React.Component {
                 )
                 //.then( chequeBooks => chequeBooks.map( chequeBook => ( { ...chequeBook, balance : 0 } ) ) )
                 .then( currentChequeBooks => {
-                    this.setState( { currentChequeBooks, hasCheckedEtherScan : true }, () => {
+                    this.setState( { currentChequeBooks, hasCheckedEtherScan : true, isFetchingChequeBooks : false }, () => {
                         this.updateCurrentBalance( () => {
                             if ( callback ) callback( currentChequeBooks );
                         } );
@@ -166,6 +171,7 @@ export default class App extends React.Component {
                 } )
                 .catch( err => {
                     this.setState( {
+                        isFetchingChequeBooks : false,
                         etherscanError : err.message,
                         hasCheckedEtherScan : true
                     } );
@@ -175,12 +181,12 @@ export default class App extends React.Component {
 
     updateCurrentBalance = callback => {
         const { activeChequeBook, currentChequeBooks } = this.state;
-        const activeBalance =
+        const activeChequeBookBalance =
             currentChequeBooks.find( x => x.address == activeChequeBook )?.balance || "0";
 
         this.setState(
             {
-                activeBalance
+                activeChequeBookBalance
             },
             callback
         );
@@ -190,7 +196,7 @@ export default class App extends React.Component {
         if ( !address ) {
             this.setState( {
                 activeChequeBook : "",
-                activeBalance : "0"
+                activeChequeBookBalance : "0"
             } );
 
             return;
@@ -199,16 +205,18 @@ export default class App extends React.Component {
         address = address.toLowerCase(); // Etherscan and web3 sometimes give different cases
 
         const { currentChequeBooks } = this.state;
-        const activeBalance = currentChequeBooks.find( chequeBook => chequeBook.address == address )
+        const activeChequeBookBalance = currentChequeBooks.find( chequeBook => chequeBook.address == address )
             ?.balance;
 
         this.setState( {
             activeChequeBook : address,
-            activeBalance
+            activeChequeBookBalance
         } );
     };
 
     selectBeneficiary = beneficiary => {
+        const { ethereumInterface } = this.props;
+
         if ( !beneficiary ) {
             this.setState( {
                 activeBeneficiary : ""
@@ -233,8 +241,24 @@ export default class App extends React.Component {
 
         this.setState( {
             activeBeneficiary : beneficiary,
-            currentBeneficiaries : updatedBeneficiaries
+            currentBeneficiaries : updatedBeneficiaries,
         } );
+
+        ethereumInterface.getBalance( beneficiary )
+            .then( balance => {
+
+                console.log( balance );
+
+                this.setState( {
+                    activeBeneficiaryBalance : balance
+                } );
+            } )
+            .catch( err => {
+                this.setState( {
+                    etherscanError : err.message,
+                    activeBeneficiaryBalance : "0"
+                } );
+            } );
     };
 
     //@TODO: Get real data
@@ -300,10 +324,12 @@ export default class App extends React.Component {
             etherscanError,
             shouldRenderSplash,
             currentEthereumAddress,
+            isFetchingChequeBooks,
             activeChequeBook,
             currentBeneficiaries,
             activeBeneficiary,
-            activeBalance,
+            activeChequeBookBalance,
+            activeBeneficiaryBalance,
             currentChequeBooks
         } = this.state;
         const { history, ethereumInterface, config } = this.props;
@@ -340,6 +366,7 @@ export default class App extends React.Component {
                                 </a>
                             </Row>
                         )}
+
                         <Switch location={history.location}>
                             <Route
                                 exact
@@ -347,9 +374,11 @@ export default class App extends React.Component {
                                 render={() => (
                                     <IssueCheque
                                         //entranceAnimation="fadeIn"
+                                        activeBeneficiaryBalance={activeBeneficiaryBalance}
+                                        isFetchingChequeBooks={isFetchingChequeBooks}
                                         currentEthereumAddress={currentEthereumAddress}
                                         ethereumInterface={ethereumInterface}
-                                        activeBalance={activeBalance}
+                                        activeChequeBookBalance={activeChequeBookBalance}
                                         currentChequeBooks={currentChequeBooks}
                                         etherscanError={etherscanError}
                                         activeChequeBook={activeChequeBook}
