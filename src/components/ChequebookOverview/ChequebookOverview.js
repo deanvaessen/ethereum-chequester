@@ -9,22 +9,21 @@ import FormSpacer from "../FormSpacer";
 export default class ChequebookOverview extends React.PureComponent {
     static propTypes = {
         chequebooks : PropTypes.array,
-        etherscanError : PropTypes.string,
+        etherScanError : PropTypes.string,
         activeChequeBook : PropTypes.string,
         shouldRenderCompact : PropTypes.bool.isRequired,
-        currentEthereumAddress : PropTypes.string,
-        handleSelect : PropTypes.func.isRequired,
-        getCurrentChequeBooks : PropTypes.func.isRequired
+        activeEthereumAddress : PropTypes.string,
+        handleSelect : PropTypes.func.isRequired
     };
 
-    getChequeBooksRequestIcon = ( isLoading, etherscanError ) => {
-        if ( etherscanError ) return "undo";
+    getChequeBooksRequestIcon = ( isLoading, etherScanError ) => {
+        if ( etherScanError ) return "undo";
         else return "clock";
     };
 
-    getChequeBooksRequestText = ( isLoading, etherscanError ) => {
+    getChequeBooksRequestText = ( isLoading, etherScanError ) => {
         if ( isLoading ) return "Requesting...";
-        else if ( etherscanError ) return "Retry";
+        else if ( etherScanError ) return "Retry";
         else return "Get my cheque books";
     };
 
@@ -34,14 +33,13 @@ export default class ChequebookOverview extends React.PureComponent {
     render() {
         const {
             handleSelect,
-            etherscanError,
+            etherScanError,
             shouldRenderCompact,
-            getCurrentChequeBooks,
-            currentEthereumAddress,
+            activeEthereumAddress,
             activeChequeBook
         } = this.props;
         const chequebooks = this.props.chequebooks?.slice( 0 ); //@TODO: Hardcapped, add button to show more/all
-        const isLoading = !chequebooks && !etherscanError && currentEthereumAddress;
+        const isLoading = !chequebooks && !etherScanError && activeEthereumAddress;
 
         return (
             <Row className="w-100 m-0 ml-0 mr-0 mt-2">
@@ -146,26 +144,27 @@ export default class ChequebookOverview extends React.PureComponent {
                     <Button
                         className="mr-2"
                         variant="primary"
-                        onClick={getCurrentChequeBooks}
-                        disabled={isLoading || !currentEthereumAddress}
+                        onClick={getKnownChequeBooks}
+                        disabled={isLoading || !activeEthereumAddress}
                     >
                         <FontAwesomeIcon
-                            icon={this.getChequeBooksRequestIcon( isLoading, etherscanError )}
+                            icon={this.getChequeBooksRequestIcon( isLoading, etherScanError )}
                             className="mr-2"
                         />
-                        {this.getChequeBooksRequestText( isLoading, etherscanError )}
+                        {this.getChequeBooksRequestText( isLoading, etherScanError )}
                     </Button>
                 )}
 
                 {isLoading && <LoadingIndicator />}
 
-                {!currentEthereumAddress && (
+                {!activeEthereumAddress && (
                     <div className="alert-spacer">
                         <AlertMessage
                             style={{ width : "100%" }}
                             intro="MetaMask is not available."
                             message="Please log in with MetaMask."
                             icon="sign-in-alt"
+                            messageIsBold={true}
                             variant="danger"
                             dismissible={true}
                             //instruction="Please try again later."
@@ -173,12 +172,13 @@ export default class ChequebookOverview extends React.PureComponent {
                     </div>
                 )}
 
-                {etherscanError && (
+                {etherScanError && (
                     <div className="alert-spacer">
                         <AlertMessage
                             style={{ width : "100%" }}
                             intro="Oh no!"
-                            message={etherscanError}
+                            message={etherScanError}
+                            messageIsBold={true}
                             icon="bug"
                             variant="danger"
                             dismissible={true}

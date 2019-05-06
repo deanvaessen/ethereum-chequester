@@ -2,9 +2,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import "./style.scss";
-import FormSpacer from "../../components/FormSpacer";
+import FormSpacer from "../FormSpacer";
 import { Row, Col, Form, InputGroup, Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ChequeDownloader from "../ChequeDownloader";
 
 export default class SharingOptions extends React.Component {
     static propTypes = {
@@ -14,31 +15,18 @@ export default class SharingOptions extends React.Component {
         shouldIncludeDownload : PropTypes.bool.isRequired,
         subject : PropTypes.string.isRequired,
         append : PropTypes.string,
-        json : PropTypes.object.isRequired,
-        filename : PropTypes.string.isRequired
+        json : PropTypes.object,
+        filename : PropTypes.string
     };
 
     initialState = {
         ownerEmail : "",
         selfEmail : "",
         recipientEmails : "",
-        description : "",
-        json : null
+        description : ""
     };
 
     state = this.initialState;
-
-    packageFile = () => {
-        const { json } = this.props;
-
-        return "text/json;charset=utf-8," + encodeURIComponent( JSON.stringify( json ) );
-    };
-
-    prepareFilename = () => {
-        const { filename } = this.props;
-
-        return `${filename}_${Date.now()}.json`;
-    };
 
     render() {
         const {
@@ -49,8 +37,8 @@ export default class SharingOptions extends React.Component {
             shouldIncludeDownload,
             shouldIncludeSelf,
             json,
-            selfEmail,
-            filename
+            filename,
+            selfEmail
         } = this.props;
         const { description, recipientEmails, ownerEmail } = this.state;
         const to = ownerEmail || recipientEmails;
@@ -196,12 +184,7 @@ export default class SharingOptions extends React.Component {
                     </a>
 
                     {shouldIncludeDownload && (
-                        <a href={` data: ${this.packageFile()}`} download={this.prepareFilename()}>
-                            <Button className="" variant="primary">
-                                <FontAwesomeIcon icon="save" className="mr-2" />
-                                Download as file
-                            </Button>
-                        </a>
+                        <ChequeDownloader cheque={json} filename={filename} />
                     )}
                 </Form.Row>
             </Form>

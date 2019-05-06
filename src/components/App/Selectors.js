@@ -1,0 +1,12 @@
+export const getIsFetchingChequeBooks = state => state.app.isFetchingChequeBooks;
+export const getIsFetchingCheques = state => state.app.isFetchingCheques;
+export const getKnownCheques = state => state.app.knownCheques;
+export const getKnownChequeBooks = state => state.app.knownChequeBooks;
+export const getKnownBeneficiaries = state => state.app.knownBeneficiaries;
+export const getActiveEthereumAddress = state => state.app.activeEthereumAddress;
+export const getActiveChequeBook = state => state.app.activeChequeBook;
+export const getActiveChequeBookBalance = state => state.app.activeChequeBookBalance;
+export const getActiveBeneficiary = state => state.app.activeBeneficiary;
+export const getActiveBeneficiaryBalance = state => state.app.activeBeneficiaryBalance;
+export const getMetaMaskError = state => state.app.metaMaskError;
+export const getEtherScanError = state => state.app.etherScanError;

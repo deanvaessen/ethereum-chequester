@@ -2,8 +2,6 @@
     "parser": "babel-eslint",
     "extends": [
         "eslint:recommended"
-        //"airbnb",
-        //"plugin:react/recommended"
     ],
     "env": {
         "browser": true,
@@ -31,8 +29,7 @@
         "jest/no-identical-title": 2,
         "indent": [
             "error",
-            4,
-
+            4
         ],
         "quotes": [
             "error",

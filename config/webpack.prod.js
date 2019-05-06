@@ -34,11 +34,6 @@ module.exports = merge( webpackBase, {
         } ),
         new WebpackCleanupPlugin( { exclude : [ "index.html" ] } ),
         new webpack.optimize.OccurrenceOrderPlugin(),
-        new webpack.optimize.UglifyJsPlugin( {
-            compressor : {
-                warnings : false
-            }
-        } ),
         new UnminifiedWebpackPlugin()
         //new ExtractTextPlugin( "style.css" )
     ],
@@ -47,7 +42,12 @@ module.exports = merge( webpackBase, {
             new UglifyJsPlugin( {
                 cache : true,
                 parallel : true,
-                sourceMap : true // set to true if you want JS source maps
+                uglifyOptions : {
+                    compress : true,
+                    ecma : 6,
+                    mangle : true
+                },
+                sourceMap : true
             } ),
             new OptimizeCSSAssetsPlugin( {} )
         ]

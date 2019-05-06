@@ -1,11 +1,13 @@
 import { Fragment } from "react";
 import PropTypes from "prop-types";
 import TransactionForm from "./TransactionForm";
+import SubscribeToEventMetaMaskSign from "../Events/SignMetaMask";
 
 export default class Transaction extends React.Component {
     static propTypes = {
+        activeEthereumAddress : PropTypes.string,
         ethereumInterface : PropTypes.object.isRequired,
-        getCurrentChequeBooks : PropTypes.func.isRequired,
+        dispatch : PropTypes.func.isRequired,
         makeDeposit : PropTypes.func.isRequired,
         transactionDescription : PropTypes.string,
         receiverAddress : PropTypes.string,
@@ -26,22 +28,8 @@ export default class Transaction extends React.Component {
     state = this.initialState;
 
     componentDidMount() {
-        this.addListeners();
+        SubscribeToEventMetaMaskSign.call( this );
     }
-
-    addListeners = () => {
-        window.addEventListener( "deposit.shouldApprove", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : true
-            } );
-        } );
-
-        window.addEventListener( "deposit.hasApproved", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : false
-            } );
-        } );
-    };
 
     render() {
         const {

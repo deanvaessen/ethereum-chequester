@@ -44,6 +44,7 @@ export default class Splash extends React.PureComponent {
                                     <AlertMessage
                                         style={{ width : "100%" }}
                                         intro="MetaMask is not available!"
+                                        messageIsBold={true}
                                         message={metaMaskError}
                                         icon="sign-in-alt"
                                         variant="warning"

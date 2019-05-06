@@ -7,56 +7,42 @@
  */
 
 import { Fragment } from "react";
-import { Helmet } from "react-helmet";
 import { Switch, Route } from "react-router-dom";
 import PropTypes from "prop-types";
 
 import { Row } from "react-bootstrap";
 
-//import HomePage from "../HomePage/";
-import Splash from "../../components/Splash/";
-import NavBar from "../../components/NavBar/";
-import PageNotFound from "../../components/PageNotFound";
-import Page from "../../components/Page";
-import AlertMessage from "../../components/AlertMessage";
+import Splash from "../Splash/";
+import NavBar from "../NavBar/";
+import PageNotFound from "../PageNotFound";
+import Page from "../Page";
+import AlertMessage from "../AlertMessage";
 import IssueCheque from "../IssueCheque";
-//import Dashboard from "../Dashboard";
 import CashCheque from "../CashCheque";
+import FlushCheques from "../FlushCheques";
 
 import "./App.scss";
-import LoadingIndicator from "../../components/LoadingIndicator";
+import LoadingIndicator from "../LoadingIndicator";
+
+import {
+    actionPersistCheque,
+    actionSetActiveEthereumAddress,
+    actionSetChequeBooks,
+    actionFetchChequeBooks,
+    actionFetchCheques
+    //actionFetchBeneficiaries
+} from "../../Actions";
+import { actionSetActiveChequeBook, actionSetActiveBeneficiary } from "./Actions";
 
 export default class App extends React.Component {
     static propTypes = {
         history : PropTypes.object.isRequired,
-        ethereumInterface : PropTypes.object.isRequired
+        activeEthereumAddress : PropTypes.string,
+        ethereumInterface : PropTypes.object.isRequired,
+        location : PropTypes.object.isRequired
     };
-
-    initialState = {
-        currentEthereumAddress : null,
-        metaMaskError : null,
-        hasCheckedMetaMask : false,
-        hasCheckedEtherScan : false,
-        shouldRenderSplash : false,
-        isFetchingChequeBooks : false,
-        currentChequeBooks : [],
-        currentBeneficiaries : [],
-        activeChequeBook : "",
-        activeChequeBookBalance : "0",
-        activeBeneficiaryBalance : "0",
-        activeBeneficiary : "",
-        etherscanError : null
-    };
-
-    state = this.initialState;
 
     pages = [
-        /*
-        {
-            path : "/",
-            label : "Dashboard"
-        },
-        */
         {
             path : "/",
             label : "Issue"
@@ -67,27 +53,70 @@ export default class App extends React.Component {
         }
     ];
 
+    initialState = {
+        hasCheckedMetaMask : false,
+        hasCheckedEtherScan : false,
+        shouldRenderSplash : false
+    };
+
+    state = this.initialState;
+
     componentDidMount() {
-        const { currentEthereumAddress } = this.state;
+        const { dispatch, ethereumInterface, activeEthereumAddress } = this.props;
 
         this.monitorMetaMask();
 
-        if ( currentEthereumAddress ) {
-            this.getCurrentChequeBooks();
-            this.getCurrentBeneficiaries();
+        if ( activeEthereumAddress ) {
+            this.primeEthereumAccount();
         } else {
             this.setState( { shouldRenderSplash : true } );
         }
     }
 
+    componentDidUpdate( prevProps, prevState ) {
+        const { activeEthereumAddress, dispatch } = this.props;
+
+        const previousEthereumAddress = prevProps.activeEthereumAddress;
+        //const noLongerConnectedToEthereum = !activeEthereumAddress && previousEthereumAddress;
+        const hasSwitchedEthereumAddress = activeEthereumAddress !== previousEthereumAddress;
+
+        if ( hasSwitchedEthereumAddress ) {
+            actionSetActiveChequeBook( dispatch )( null );
+            actionSetActiveBeneficiary( dispatch )( null );
+            actionSetChequeBooks( dispatch )( [] );
+
+            if ( activeEthereumAddress ) this.primeEthereumAccount();
+        }
+    }
+
+    primeEthereumAccount() {
+        const { isFetchingChequeBooks, isFetchingCheques } = this.props;
+
+        if ( !isFetchingChequeBooks ) this.primeChequeBooks();
+        if ( !isFetchingCheques ) this.primeCheques();
+    }
+
+    primeChequeBooks = () => {
+        const { activeEthereumAddress, dispatch, ethereumInterface } = this.props;
+
+        actionFetchChequeBooks( dispatch, ethereumInterface )( activeEthereumAddress )
+            .then( () => this.setState( { hasCheckedEtherScan : true } ) )
+            .catch( () => this.setState( { hasCheckedEtherScan : true } ) );
+    };
+
+    primeCheques = () => {
+        const { activeEthereumAddress, dispatch } = this.props;
+
+        actionFetchCheques( dispatch )( activeEthereumAddress );
+    };
+
+    monitorMetaMask = () => {
+        setInterval( this.pollMetaMask, 1000 );
+    };
+
     pollMetaMask = () => {
-        const { ethereumInterface } = this.props;
-        const {
-            currentEthereumAddress,
-            metaMaskError,
-            shouldRenderSplash,
-            hasCheckedMetaMask
-        } = this.state;
+        const { ethereumInterface, activeEthereumAddress, dispatch } = this.props;
+        const { hasCheckedMetaMask } = this.state;
         //const { web3 } = this.props;
         const shouldCheckForAccountUpdate = ethereumInterface.metaMaskIsAvailable(); //web3;
         const shouldAskUserToInstallMetaMask = !ethereumInterface.metaMaskIsAvailable(); //!web3 && !metaMaskError;
@@ -103,25 +132,25 @@ export default class App extends React.Component {
                 .getCurrentAccounts()
                 .then( accounts => {
                     const newAddress = accounts[0];
-                    const accountHasLoggedOut = currentEthereumAddress && !newAddress;
+                    const accountHasLoggedOut = activeEthereumAddress && !newAddress;
                     const accountHasBeenUpdated =
-                        newAddress && newAddress !== currentEthereumAddress;
+                        newAddress && newAddress !== activeEthereumAddress;
 
                     if ( accountHasBeenUpdated ) {
                         this.setState( {
                             hasCheckedMetaMask : true,
-                            currentEthereumAddress : newAddress,
                             metaMaskError : null,
                             shouldRenderSplash : false
                         } );
 
-
+                        actionSetActiveEthereumAddress( dispatch )( newAddress );
                     } else if ( accountHasLoggedOut ) {
                         this.setState( {
                             hasCheckedMetaMask : true,
-                            currentEthereumAddress : newAddress,
                             metaMaskError : "You are not logged in to MetaMask"
                         } );
+
+                        actionSetActiveEthereumAddress( dispatch )( newAddress );
                     } else if ( !hasCheckedMetaMask ) {
                         this.setState( {
                             metaMaskError : "You are not logged in to MetaMask",
@@ -130,184 +159,15 @@ export default class App extends React.Component {
                     }
                 } )
                 .catch( err => {
+                    console.warn( err );
+
                     this.setState( {
-                        shouldRenderSplash : currentEthereumAddress ? false : true, // do not go back to splash when I was already logged in
+                        shouldRenderSplash : activeEthereumAddress ? false : true, // do not go back to splash when I was already logged in
                         metaMaskError : err.message,
                         hasCheckedMetaMask : true
                     } );
                 } );
         }
-    };
-
-    getCurrentChequeBooks = callback => {
-        const { ethereumInterface } = this.props;
-        const { currentEthereumAddress } = this.state;
-
-        this.setState( {
-            isFetchingChequeBooks : true,
-            currentChequeBooks : [],
-            etherscanError : null
-        } );
-
-        return (
-            ethereumInterface
-                .getUserChequeBooks( currentEthereumAddress )
-                .then( results =>
-                    results.map( contract => ( {
-                        balance : contract.balance,
-                        alias : contract.alias,
-                        address : contract.contractAddress.toLowerCase() // Etherscan and web3 sometimes give different cases
-                    } ) )
-                )
-                //.then( chequeBooks => chequeBooks.map( chequeBook => ( { ...chequeBook, balance : 0 } ) ) )
-                .then( currentChequeBooks => {
-                    this.setState( { currentChequeBooks, hasCheckedEtherScan : true, isFetchingChequeBooks : false }, () => {
-                        this.updateCurrentBalance( () => {
-                            if ( callback ) callback( currentChequeBooks );
-                        } );
-                    } );
-
-                    return currentChequeBooks;
-                } )
-                .catch( err => {
-                    this.setState( {
-                        isFetchingChequeBooks : false,
-                        etherscanError : err.message,
-                        hasCheckedEtherScan : true
-                    } );
-                } )
-        );
-    };
-
-    updateCurrentBalance = callback => {
-        const { activeChequeBook, currentChequeBooks } = this.state;
-        const activeChequeBookBalance =
-            currentChequeBooks.find( x => x.address == activeChequeBook )?.balance || "0";
-
-        this.setState(
-            {
-                activeChequeBookBalance
-            },
-            callback
-        );
-    };
-
-    selectChequeBook = address => {
-        if ( !address ) {
-            this.setState( {
-                activeChequeBook : "",
-                activeChequeBookBalance : "0"
-            } );
-
-            return;
-        }
-
-        address = address.toLowerCase(); // Etherscan and web3 sometimes give different cases
-
-        const { currentChequeBooks } = this.state;
-        const activeChequeBookBalance = currentChequeBooks.find( chequeBook => chequeBook.address == address )
-            ?.balance;
-
-        this.setState( {
-            activeChequeBook : address,
-            activeChequeBookBalance
-        } );
-    };
-
-    selectBeneficiary = beneficiary => {
-        const { ethereumInterface } = this.props;
-
-        if ( !beneficiary ) {
-            this.setState( {
-                activeBeneficiary : ""
-            } );
-
-            return;
-        }
-
-        const { currentBeneficiaries } = this.state;
-        const updatedBeneficiaries = [ { address : beneficiary } ];
-
-        // Make unique list
-        for ( const beneficiary of currentBeneficiaries ) {
-            const { address } = beneficiary;
-
-            if ( !updatedBeneficiaries.map( b => b.address ).includes( address ) ) {
-                updatedBeneficiaries.push( {
-                    address
-                } );
-            }
-        }
-
-        this.setState( {
-            activeBeneficiary : beneficiary,
-            currentBeneficiaries : updatedBeneficiaries,
-        } );
-
-        ethereumInterface.getBalance( beneficiary )
-            .then( balance => {
-
-                console.log( balance );
-
-                this.setState( {
-                    activeBeneficiaryBalance : balance
-                } );
-            } )
-            .catch( err => {
-                this.setState( {
-                    etherscanError : err.message,
-                    activeBeneficiaryBalance : "0"
-                } );
-            } );
-    };
-
-    //@TODO: Get real data
-    getCurrentBeneficiaries = () => {
-        const currentBeneficiaries = [];
-        /*
-        const currentBeneficiaries = [
-            {
-                address : "0x" + Math.floor( Math.random() * 80 ) + ".....",
-                //alias : "lorem_ipsum_" + Math.floor( Math.random() * 20 ),
-                chequesTotal : Math.floor( Math.random() * 20 )
-            },
-            {
-                address : "0x" + Math.floor( Math.random() * 80 ) + ".....",
-                //alias : "lorem_ipsum_" + Math.floor( Math.random() * 20 ),
-                chequesTotal : Math.floor( Math.random() * 20 )
-            },
-            {
-                address : "0x" + Math.floor( Math.random() * 80 ) + ".....",
-                //alias : "lorem_ipsum_" + Math.floor( Math.random() * 20 ),
-                chequesTotal : Math.floor( Math.random() * 20 )
-            }
-        ];
-        */
-
-        this.setState( {
-            currentBeneficiaries
-        } );
-    };
-
-    componentDidUpdate( prevProps, prevState ) {
-        const { currentEthereumAddress } = this.state;
-        const previousEthereumAddress = prevState.currentEthereumAddress;
-        const noLongerConnectedToEthereum = !currentEthereumAddress && previousEthereumAddress;
-        const shouldCheckForChequeBooks =
-            currentEthereumAddress && currentEthereumAddress !== previousEthereumAddress;
-
-        if ( noLongerConnectedToEthereum ) {
-            this.setState( {
-                currentChequeBooks : []
-            } );
-        } else if ( shouldCheckForChequeBooks ) {
-            this.getCurrentChequeBooks();
-            //this.getCurrentBeneficiaries(); //@TODO: Does not pull from Ethereum yet
-        }
-    }
-
-    monitorMetaMask = () => {
-        setInterval( this.pollMetaMask, 1000 );
     };
 
     skipSplash = () => {
@@ -319,20 +179,8 @@ export default class App extends React.Component {
     };
 
     renderApp = () => {
-        const {
-            metaMaskError,
-            etherscanError,
-            shouldRenderSplash,
-            currentEthereumAddress,
-            isFetchingChequeBooks,
-            activeChequeBook,
-            currentBeneficiaries,
-            activeBeneficiary,
-            activeChequeBookBalance,
-            activeBeneficiaryBalance,
-            currentChequeBooks
-        } = this.state;
-        const { history, ethereumInterface, config } = this.props;
+        const { shouldRenderSplash } = this.state;
+        const { metaMaskError, ethereumInterface, config } = this.props;
         const { TEST_CONTRACT, TEST_BENEFICIARY } = config;
         const shouldPreFill = process?.env?.NODE_ENV == "dev" ? true : false;
 
@@ -358,6 +206,7 @@ export default class App extends React.Component {
                                         style={{ width : "100%" }}
                                         intro="MetaMask is not available!"
                                         message={metaMaskError}
+                                        messageIsBold={true}
                                         icon="sign-in-alt"
                                         variant="warning"
                                         dismissible={false}
@@ -367,27 +216,14 @@ export default class App extends React.Component {
                             </Row>
                         )}
 
-                        <Switch location={history.location}>
+                        <Switch>
                             <Route
                                 exact
                                 path="/"
                                 render={() => (
                                     <IssueCheque
                                         //entranceAnimation="fadeIn"
-                                        activeBeneficiaryBalance={activeBeneficiaryBalance}
-                                        isFetchingChequeBooks={isFetchingChequeBooks}
-                                        currentEthereumAddress={currentEthereumAddress}
                                         ethereumInterface={ethereumInterface}
-                                        activeChequeBookBalance={activeChequeBookBalance}
-                                        currentChequeBooks={currentChequeBooks}
-                                        etherscanError={etherscanError}
-                                        activeChequeBook={activeChequeBook}
-                                        selectChequeBook={this.selectChequeBook}
-                                        getCurrentChequeBooks={this.getCurrentChequeBooks}
-                                        currentBeneficiaries={currentBeneficiaries}
-                                        activeBeneficiary={activeBeneficiary}
-                                        selectBeneficiary={this.selectBeneficiary}
-                                        getCurrentBeneficiaries={this.getCurrentBeneficiaries}
                                         preFilledContract={shouldPreFill && TEST_CONTRACT}
                                         preFilledBeneficiary={shouldPreFill && TEST_BENEFICIARY}
                                     />
@@ -397,10 +233,17 @@ export default class App extends React.Component {
                                 exact
                                 path="/cash"
                                 render={() => (
-                                    <CashCheque
-                                        //entranceAnimation="fadeIn"
-                                        ethereumInterface={ethereumInterface}
-                                    />
+                                    <Page
+                                        columns="col-12 col-s-10 col-md-8 col-lg-6"
+                                        pageIcon="hand-holding"
+                                        pageHeader="Cash out cheques"
+                                    >
+                                        <CashCheque ethereumInterface={ethereumInterface} />
+
+                                        <div className="mt-5 mb-5" />
+
+                                        <FlushCheques ethereumInterface={ethereumInterface} />
+                                    </Page>
                                 )}
                             />
                             <Route exact path="" render={() => <PageNotFound />} />
@@ -412,28 +255,19 @@ export default class App extends React.Component {
     };
 
     render() {
-        const {
-            shouldRenderSplash,
-            hasCheckedMetaMask,
-            hasCheckedEtherScan,
-            currentEthereumAddress
-        } = this.state;
-        const { history } = this.props;
-        const currentPage = history.location.pathname;
+        const { shouldRenderSplash, hasCheckedMetaMask, hasCheckedEtherScan } = this.state;
+        const { location, activeEthereumAddress } = this.props;
+        const currentPage = location.pathname;
         const shouldRenderApp = hasCheckedMetaMask && ( hasCheckedEtherScan || shouldRenderSplash );
 
         return (
             <div className="app-wrapper">
-                <Helmet titleTemplate="%s" defaultTitle="ethereum-chequebook">
-                    <meta name="description" content="Ethereum cheque book frontend" />
-                </Helmet>
-
                 <NavBar
                     pages={this.pages}
                     history={history}
                     currentPage={currentPage}
                     shouldRenderSplash={shouldRenderSplash}
-                    currentEthereumAddress={currentEthereumAddress}
+                    activeEthereumAddress={activeEthereumAddress}
                 />
 
                 {shouldRenderApp ? (

@@ -5,16 +5,17 @@ import { Fragment } from "react";
 
 export default class ActionButtons extends React.PureComponent {
     static propTypes = {
-        handleConfirmation : PropTypes.func.isRequired,
-        handleAbort : PropTypes.func.isRequired,
-        variantConfirmation : PropTypes.string.isRequired,
-        variantAbort : PropTypes.string.isRequired,
-        confirmationLabel : PropTypes.string.isRequired,
-        abortLabel : PropTypes.string.isRequired,
-        confirmationIcon : PropTypes.oneOfType( [ PropTypes.string, PropTypes.array ] ).isRequired,
-        abortIcon : PropTypes.string.isRequired,
         disabled : PropTypes.bool.isRequired,
-        disabledAbort : PropTypes.bool.isRequired,
+        handleConfirmation : PropTypes.func.isRequired,
+        variantConfirmation : PropTypes.string.isRequired,
+        confirmationLabel : PropTypes.string.isRequired,
+        confirmationIcon : PropTypes.oneOfType( [ PropTypes.string, PropTypes.array ] ).isRequired,
+        handleAbort : PropTypes.func,
+        variantAbort : PropTypes.string,
+        abortShouldNotRender : PropTypes.bool,
+        abortLabel : PropTypes.string,
+        abortIcon : PropTypes.string,
+        abortIsDisabled : PropTypes.bool,
         delay : PropTypes.string
     };
 
@@ -35,7 +36,8 @@ export default class ActionButtons extends React.PureComponent {
             confirmationIcon,
             abortIcon,
             disabled,
-            disabledAbort,
+            abortIsDisabled,
+            abortShouldNotRender,
             delay
         } = this.props;
 
@@ -51,10 +53,12 @@ export default class ActionButtons extends React.PureComponent {
                     {confirmationLabel}
                 </Button>
 
-                <Button variant={variantAbort} onClick={handleAbort} disabled={disabledAbort}>
-                    <FontAwesomeIcon icon={abortIcon} className="mr-2" />
-                    {abortLabel}
-                </Button>
+                {!abortShouldNotRender && (
+                    <Button variant={variantAbort} onClick={handleAbort} disabled={abortIsDisabled}>
+                        <FontAwesomeIcon icon={abortIcon} className="mr-2" />
+                        {abortLabel}
+                    </Button>
+                )}
             </span>
         );
     }

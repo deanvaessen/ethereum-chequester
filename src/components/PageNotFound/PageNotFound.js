@@ -12,7 +12,7 @@ export default class PageNotFound extends React.PureComponent {
             <Page>
                 <h2 className="mt-2 mb-2">We seem to have run into some trouble...</h2>
                 <hr className="mb-4" />
-                  <div className="alert-spacer">
+                <div className="alert-spacer">
                     <AlertMessage
                         style={{ width : "100%" }}
                         intro="Oh no!"
@@ -20,6 +20,7 @@ export default class PageNotFound extends React.PureComponent {
                         icon="bug"
                         variant="danger"
                         dismissible={false}
+                        messageIsBold={true}
                         instruction="Please try again, but a different page."
                     />
                 </div>

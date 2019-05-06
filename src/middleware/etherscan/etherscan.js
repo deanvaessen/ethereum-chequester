@@ -1,4 +1,4 @@
-export default class Etherscan {
+export default class EtherScan {
     constructor( network, apiKey ) {
         this.network = network;
         this.apiKey = apiKey;
@@ -8,7 +8,7 @@ export default class Etherscan {
      * Gets all cheque book contract creation events
      *
      * @param {string} account - The ethereum address to get all transactions from
-     * @memberof Etherscan
+     * @memberof EtherScan
      */
     getChequeBookContractCreationTransactions = ( contractInterface, account ) => {
         //prettier-ignore
@@ -25,7 +25,7 @@ export default class Etherscan {
      * Gets all contract creation transactionsf or an account
      *
      * @param {string} account - The ethereum address to get all transactions from
-     * @memberof Etherscan
+     * @memberof EtherScan
      */
     getContractCreationTransactionsForAccount = account => {
         return this.getAccountTransactionsForAccount( account ).then( transactions => {
@@ -37,7 +37,7 @@ export default class Etherscan {
      * Takes transactions and retains all the contract creation transcations
      * @param {array} transactions - All the transcations
      *
-     * @memberof Etherscan
+     * @memberof EtherScan
      */
     filterContractCreationTransactions = transactions => {
         return transactions.filter( transaction => transaction.to.length == 0 );
@@ -52,11 +52,11 @@ export default class Etherscan {
      * Gets all transcations for a certain account
      * @param {string} account - The ethereum address to get all transactions from
      *
-     * @memberof Etherscan
+     * @memberof EtherScan
      */
     getAccountTransactionsForAccount = account => {
         const baseUrl = `https://${this.network ||
-            "api"}.etherscan.io/api?module=account&action=txlist&address=`;
+            "api"}.etherScan.io/api?module=account&action=txlist&address=`;
         const query = `${account}&startblock=0&endblock=99999999sort=asc&apikey=`;
         const url = baseUrl + query + this.apiKey;
 

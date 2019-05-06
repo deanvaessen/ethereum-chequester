@@ -9,7 +9,7 @@ export default class NavBar extends React.PureComponent {
     static propTypes = {
         pages : PropTypes.array.isRequired,
         shouldRenderSplash : PropTypes.bool.isRequired,
-        currentEthereumAddress : PropTypes.string,
+        activeEthereumAddress : PropTypes.string,
         currentPage : PropTypes.string.isRequired,
         history : PropTypes.object.isRequired
     };
@@ -19,7 +19,7 @@ export default class NavBar extends React.PureComponent {
             pages,
             history,
             shouldRenderSplash,
-            currentEthereumAddress,
+            activeEthereumAddress,
             currentPage
         } = this.props;
 
@@ -72,10 +72,10 @@ export default class NavBar extends React.PureComponent {
                     >
                         <p className="m-0 nav-link" style={{ padding : 0, paddingBottom : "11px" }}>
                             <FontAwesomeIcon
-                                icon={currentEthereumAddress ? "user-astronaut" : "sign-in-alt"}
+                                icon={activeEthereumAddress ? "user-astronaut" : "sign-in-alt"}
                                 className="mr-2"
                             />
-                            {currentEthereumAddress || "Not logged in."}
+                            {activeEthereumAddress || "Not logged in."}
                         </p>
                     </Nav>
                 </Navbar.Collapse>
