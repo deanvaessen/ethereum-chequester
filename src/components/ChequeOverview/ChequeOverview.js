@@ -6,7 +6,7 @@ export default class ChequeOverview extends React.PureComponent {
     static propTypes = {
         contractAddress : PropTypes.string.isRequired,
         beneficiary : PropTypes.string.isRequired,
-        chequeAmount : PropTypes.string.isRequired,
+        chequeAmount : PropTypes.oneOfType( [ PropTypes.string, PropTypes.number ] ).isRequired,
         previousTotal : PropTypes.string.isRequired
     };
 
@@ -35,7 +35,7 @@ export default class ChequeOverview extends React.PureComponent {
                             </InputGroup.Prepend>
                             <div
                                 style={{
-                                    background : "rgb(108, 117, 125);",
+                                    //background : "rgb(108, 117, 125)",
                                     display : "flex",
                                     alignItems : "center",
                                     justifyContent : "end",
@@ -80,17 +80,17 @@ export default class ChequeOverview extends React.PureComponent {
                                     }}
                                 >
                                     <FontAwesomeIcon
-                                        icon="wallet"
+                                        icon="user"
                                         style={{
-                                            marginLeft : "2px",
-                                            marginRight : "2px"
+                                            marginLeft : "3px",
+                                            marginRight : "3px"
                                         }}
                                     />
                                 </Button>
                             </InputGroup.Prepend>
                             <div
                                 style={{
-                                    background : "rgb(108, 117, 125);",
+                                    //background : "rgb(108, 117, 125)",
                                     display : "flex",
                                     alignItems : "center",
                                     justifyContent : "end",
@@ -146,7 +146,7 @@ export default class ChequeOverview extends React.PureComponent {
                             </InputGroup.Prepend>
                             <div
                                 style={{
-                                    background : "rgb(108, 117, 125);",
+                                    //background : "rgb(108, 117, 125)",
                                     display : "flex",
                                     alignItems : "center",
                                     justifyContent : "end",
@@ -203,7 +203,7 @@ export default class ChequeOverview extends React.PureComponent {
                             </InputGroup.Prepend>
                             <div
                                 style={{
-                                    background : "rgb(108, 117, 125);",
+                                    //background : "rgb(108, 117, 125)",
                                     display : "flex",
                                     alignItems : "center",
                                     justifyContent : "end",
@@ -254,7 +254,7 @@ export default class ChequeOverview extends React.PureComponent {
                             </InputGroup.Prepend>
                             <div
                                 style={{
-                                    background : "rgb(108, 117, 125);",
+                                    //background : "rgb(108, 117, 125)",
                                     display : "flex",
                                     alignItems : "center",
                                     justifyContent : "end",
@@ -274,9 +274,9 @@ export default class ChequeOverview extends React.PureComponent {
                                 style={{
                                     borderTopRightRadius : 0
                                 }}
-                                aria-label="ETH cheque amount"
+                                aria-label="ETH previous total amount"
                                 aria-describedby="basic-addon2"
-                                name="ETH cheque amount"
+                                name="ETH previous total amount"
                                 value={previousTotal}
                                 onChange={() => {}}
                             />

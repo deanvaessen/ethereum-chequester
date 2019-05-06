@@ -14,41 +14,38 @@ import {
     Tab
 } from "react-bootstrap";
 import PropTypes from "prop-types";
-import FormSpacer from "../../components/FormSpacer";
-import AlertMessage from "../../components/AlertMessage";
+import FormSpacer from "../FormSpacer";
+import AlertMessage from "../AlertMessage";
 import SharingOptions from "../SharingOptions";
 //import RequestChequeBook from "../RequestChequeBook";
-import ChequeOverview from "../../components/ChequeOverview";
-import ActionButtons from "../../components/ActionButtons";
-import Page from "../../components/Page";
-import ChequeForm from "../../components/ChequeForm";
-import ChequeUploader from "../../components/ChequeUploader";
+import ChequeOverview from "../ChequeOverview";
+import ActionButtons from "../ActionButtons";
+import Page from "../Page";
+import ChequeForm from "../ChequeForm";
+import ChequeUploader from "../ChequeUploader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import EthereumLoadingIndicator from "../../components/EthereumLoadingIndicator";
-import ChequePrefill from "../../components/ChequePrefill";
+import EthereumLoadingIndicator from "../EthereumLoadingIndicator";
 
 import {
-    Accordion,
-    AccordionItem,
-    AccordionItemTitle,
-    AccordionItemBody
-} from "react-accessible-accordion";
-//import MyBeneficiaries from "../../components/MyBeneficiaries";
+    actionAddBeneficiary,
+    actionSetActiveBeneficiary,
+    actionSetActiveChequeBook,
+    actionPersistCheque,
+    actionFetchCheques,
+    actionFetchBalanceForActiveBeneficiary
+} from "../../Actions";
+
+import SubscribeToEventMetaMaskSign from "../Events/SignMetaMask";
 
 export default class IssueCheque extends React.Component {
     static propTypes = {
-        activeChequeBook : PropTypes.string.isRequired,
-        activeChequeBookBalance : PropTypes.string.isRequired,
-        activeBeneficiaryBalance : PropTypes.string.isRequired,
-        isFetchingChequeBooks : PropTypes.bool.isRequired,
-        activeBeneficiary : PropTypes.string.isRequired,
+        activeChequeBook : PropTypes.string,
+        activeChequeBookBalance : PropTypes.string,
+        activeBeneficiaryBalance : PropTypes.string,
+        activeBeneficiary : PropTypes.string,
         ethereumInterface : PropTypes.object.isRequired,
-        etherscanError : PropTypes.string,
-        currentEthereumAddress : PropTypes.string,
-        currentChequeBooks : PropTypes.array,
-        selectChequeBook : PropTypes.func.isRequired,
-        //updateCurrentBalance : PropTypes.func.isRequired,
-        getCurrentChequeBooks : PropTypes.func.isRequired,
+        etherScanError : PropTypes.string,
+        knownChequeBooks : PropTypes.array,
         preFilledBeneficiary : PropTypes.string,
         entranceAnimation : PropTypes.string
     };
@@ -76,22 +73,10 @@ export default class IssueCheque extends React.Component {
             } );
         }
 
-        this.addListeners();
+        SubscribeToEventMetaMaskSign.call( this );
     }
 
-    addListeners = () => {
-        window.addEventListener( "sign.shouldApprove", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : true
-            } );
-        } );
-
-        window.addEventListener( "sign.hasApproved", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : false
-            } );
-        } );
-    };
+    componentDidUpdate() {}
 
     onDropAttempt = callback => {
         this.setState(
@@ -103,27 +88,30 @@ export default class IssueCheque extends React.Component {
     };
 
     onDropSuccess = ( acceptedFiles, cheque ) => {
-        const { currentChequeBooks, selectChequeBook, selectBeneficiary } = this.props;
+        const { knownChequeBooks, knownBeneficiaries, dispatch, ethereumInterface } = this.props;
         const { contract, beneficiary, amount } = cheque;
-        const chequeBookIsKnown = currentChequeBooks.find(
-            chequeBook => chequeBook.address == contract
-        );
+        const knownChequeBook = knownChequeBooks.find( chequeBook => chequeBook.address == contract );
 
-        if ( !chequeBookIsKnown ) {
+        if ( !knownChequeBook ) {
             this.onDropFailure(
                 "The cheque book for this cheque does not seem to belong to your account."
             );
             return;
         }
 
-        selectChequeBook( contract );
-        selectBeneficiary( beneficiary );
-
-        this.setState( {
-            previousTotal : amount,
-            fileError : null,
-            files : acceptedFiles
-        } );
+        actionSetActiveChequeBook( dispatch, ethereumInterface )( contract, knownChequeBooks )
+            .then( () => actionAddBeneficiary( dispatch )( beneficiary, knownBeneficiaries ) )
+            .then( () => actionSetActiveBeneficiary( dispatch )( beneficiary ) )
+            .then( () =>
+                actionFetchBalanceForActiveBeneficiary( dispatch, ethereumInterface )( beneficiary )
+            )
+            .then( () =>
+                this.setState( {
+                    previousTotal : amount,
+                    fileError : null,
+                    files : acceptedFiles
+                } )
+            );
     };
 
     onDropFailure = error => {
@@ -134,7 +122,13 @@ export default class IssueCheque extends React.Component {
     };
 
     issueCheque = () => {
-        const { activeChequeBook, activeBeneficiary, ethereumInterface } = this.props;
+        const {
+            activeChequeBook,
+            activeBeneficiary,
+            activeEthereumAddress,
+            ethereumInterface,
+            dispatch
+        } = this.props;
         const { amount, previousTotal } = this.state;
 
         this.setState( {
@@ -164,10 +158,19 @@ export default class IssueCheque extends React.Component {
                 );
             } )
             .then( cheque => {
+                const timestamp = new Date( Date.now() ).toISOString();
+
                 this.setState( {
-                    signedCheque : cheque,
+                    signedCheque : {
+                        ...cheque,
+                        timestamp
+                    },
                     isInteractionWithEthereum : false
                 } );
+
+                actionPersistCheque( dispatch )( activeEthereumAddress, { ...cheque, timestamp } ).then(
+                    () => actionFetchCheques( dispatch )( activeEthereumAddress )
+                );
             } )
             .catch( error => {
                 this.setState( {
@@ -218,8 +221,7 @@ export default class IssueCheque extends React.Component {
                         append={`Contract address: ${activeChequeBook}`}
                         json={{
                             ...signedCheque,
-                            previousTotal : previousTotal,
-                            timestamp : new Date( Date.now() ).toISOString()
+                            previousTotal : previousTotal
                         }}
                         filename="cheque"
                     />
@@ -232,24 +234,12 @@ export default class IssueCheque extends React.Component {
         const {
             entranceAnimation,
             ethereumInterface,
-            shouldPreFill,
-            currentEthereumAddress,
-            currentChequeBooks,
-            getCurrentChequeBooks,
-            etherscanError,
-            selectChequeBook,
+            etherScanError,
             activeChequeBook,
-            //updateCurrentBalance,
-            activeChequeBookBalance,
-            currentBeneficiaries,
             activeBeneficiary,
-            selectBeneficiary,
-            activeBeneficiaryBalance,
-            isFetchingChequeBooks,
-            getCurrentBeneficiaries,
-            TEST_BENEFICIARY
-            //TEST_CONTRACT,
+            dispatch
         } = this.props;
+
         const {
             signedCheque,
             ethereumError,
@@ -261,14 +251,14 @@ export default class IssueCheque extends React.Component {
             metaMaskPromptIsAvailable
         } = this.state;
 
-        //@TODO: Move these validations to the ethereumInterface's chequeIsValid
-        const addressIsValid = ethereumInterface.addressIsValid( activeChequeBook );
-        const walletIsValid = ethereumInterface.addressIsValid( activeBeneficiary );
         const hasIssuedChequeBefore = files.length > 0;
-        const hasAddedAmount = Number( amount ) && amount > 0;
-        const chequeCompletedWithPrefill = hasIssuedChequeBefore && hasAddedAmount;
-        const chequeCompletedAsVirgin = hasAddedAmount && addressIsValid && walletIsValid;
-        const requestIsPrimed = chequeCompletedWithPrefill || chequeCompletedAsVirgin;
+
+        //@TODO: Move these validations to the ethereumInterface's chequeIsValid
+        //const addressIsValid = ethereumInterface.addressIsValid( activeChequeBook );
+        //const walletIsValid = ethereumInterface.addressIsValid( activeBeneficiary );
+        //const hasAddedAmount = Number( amount ) && amount > 0;
+        //const chequeCompletedWithPrefill = hasIssuedChequeBefore && hasAddedAmount;
+        //const chequeCompletedAsVirgin = hasAddedAmount && addressIsValid && walletIsValid;
 
         return (
             <Page
@@ -292,22 +282,22 @@ export default class IssueCheque extends React.Component {
                             <Fragment>
                                 <ChequeForm
                                     contract={activeChequeBook}
-                                    activeChequeBookBalance={activeChequeBookBalance}
-                                    currentBeneficiaries={currentBeneficiaries}
                                     beneficiary={activeBeneficiary}
-                                    currentChequeBooks={currentChequeBooks}
                                     ethereumInterface={ethereumInterface}
-                                    selectChequeBook={selectChequeBook}
-                                    activeBeneficiaryBalance={activeBeneficiaryBalance}
                                     amount={amount}
-                                    //updateCurrentBalance={updateCurrentBalance}
                                     hasIssuedChequeBefore={hasIssuedChequeBefore}
                                     previousTotal={previousTotal}
-                                    handleContractChange={selectChequeBook}
-                                    getCurrentChequeBooks={getCurrentChequeBooks}
                                     handleAmountChange={this.handleAmountChange}
-                                    handleBeneficiaryChange={selectBeneficiary}
-                                    isFetchingChequeBooks={isFetchingChequeBooks}
+                                    handleBeneficiaryChange={beneficiary =>
+                                        //prettier-ignore
+                                        actionSetActiveBeneficiary( dispatch )( beneficiary )
+                                            .then( () =>
+                                                actionFetchBalanceForActiveBeneficiary(
+                                                    dispatch,
+                                                    ethereumInterface
+                                                )( beneficiary )
+                                            )
+                                    }
                                     ChequeUploader={() => (
                                         <ChequeUploader
                                             ethereumInterface={ethereumInterface}
@@ -351,8 +341,8 @@ export default class IssueCheque extends React.Component {
                                 handleConfirmation={this.issueCheque}
                                 handleAbort={() => {
                                     this.setState( this.initialState );
-                                    selectBeneficiary( null );
-                                    selectChequeBook( null );
+                                    actionSetActiveBeneficiary( dispatch )( null );
+                                    actionSetActiveChequeBook( dispatch )( null );
                                 }}
                                 variantConfirmation="primary"
                                 variantAbort="danger"
@@ -361,7 +351,7 @@ export default class IssueCheque extends React.Component {
                                 confirmationIcon="check"
                                 abortIcon="undo"
                                 disabled={!this.getRequestApproval()}
-                                disabledAbort={false}
+                                abortIsDisabled={false}
                                 delay={null}
                             />
                         </Row>
@@ -380,6 +370,7 @@ export default class IssueCheque extends React.Component {
                                     message="MetaMask input requested"
                                     icon="key"
                                     variant="info"
+                                    messageIsBold={true}
                                     dismissible={true}
                                 />
                             </div>
@@ -394,20 +385,22 @@ export default class IssueCheque extends React.Component {
                                     icon="bug"
                                     variant="danger"
                                     dismissible={true}
+                                    messageIsBold={true}
                                     instruction="Please try again."
                                 />
                             </div>
                         )}
 
-                        {etherscanError && (
+                        {etherScanError && (
                             <div className="alert-spacer">
                                 <AlertMessage
                                     style={{ width : "100%" }}
                                     intro="Oh no!"
-                                    message={etherscanError}
+                                    message={etherScanError}
                                     icon="bug"
                                     variant="danger"
                                     dismissible={true}
+                                    messageIsBold={true}
                                     instruction="Please try again."
                                 />
                             </div>

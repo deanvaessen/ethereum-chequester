@@ -1,1 +1,1 @@
-export { default } from "./etherscan";
+export { default } from "./etherScan";

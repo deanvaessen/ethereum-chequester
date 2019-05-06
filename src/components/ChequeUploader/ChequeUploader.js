@@ -48,13 +48,6 @@ export default class ChequeUploader extends React.PureComponent {
     render() {
         const { files, note, fileError } = this.props;
 
-        const previewStyle = {
-            display : "inline",
-            height : "100%"
-            //width : 100,
-            //height : 100
-        };
-
         return (
             <Fragment>
                 <ReactDropzone
@@ -86,7 +79,7 @@ export default class ChequeUploader extends React.PureComponent {
                             <div className="mx-auto">
                                 <Alert variant="info">
                                     <FontAwesomeIcon icon="check-circle" className="mr-2" />
-                                    Added cheques: <strong>{files.length}/1</strong>
+                                    Added cheques: <strong>{files.length}</strong>
                                 </Alert>
                             </div>;
                         } else {
@@ -111,6 +104,7 @@ export default class ChequeUploader extends React.PureComponent {
                             intro="All good!"
                             message="Cheque read, good to go."
                             icon="check-circle"
+                            messageIsBold={true}
                             variant="success"
                             dismissible={true}
                         />
@@ -125,6 +119,7 @@ export default class ChequeUploader extends React.PureComponent {
                             message={fileError}
                             icon="bug"
                             variant="danger"
+                            messageIsBold={true}
                             dismissible={true}
                             instruction="Please try again."
                         />

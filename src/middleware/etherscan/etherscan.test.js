@@ -1,5 +1,5 @@
 const config = require( "../../../config/app.json" );
-const EtherScan = require( "./etherscan" ).default;
+const EtherScan = require( "./etherScan" ).default;
 
 const { ETHERSCAN_NETWORK, ETHERSCAN_API_KEY, TEST_OWNER } = config;
 const etherScan = new EtherScan( ETHERSCAN_NETWORK, ETHERSCAN_API_KEY );

@@ -1,19 +1,19 @@
 import { Fragment } from "react";
 import PropTypes from "prop-types";
-import ChequeUploader from "../../components/ChequeUploader";
+import ChequeUploader from "../ChequeUploader";
 import SharingOptions from "../SharingOptions";
-import { Row, Button } from "react-bootstrap";
+import { Row, Col, Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Page from "../../components/Page";
-import AlertMessage from "../../components/AlertMessage";
-import ChequeOverview from "../../components/ChequeOverview";
-import ActionButtons from "../../components/ActionButtons";
-import EthereumLoadingIndicator from "../../components/EthereumLoadingIndicator";
+
+import AlertMessage from "../AlertMessage";
+import ChequeOverview from "../ChequeOverview";
+import ActionButtons from "../ActionButtons";
+import EthereumLoadingIndicator from "../EthereumLoadingIndicator";
+import SubscribeToEventMetaMaskSign from "../Events/SignMetaMask";
 
 export default class CashCheque extends React.Component {
     static propTypes = {
-        ethereumInterface : PropTypes.object.isRequired,
-        entranceAnimation : PropTypes.string
+        ethereumInterface : PropTypes.object.isRequired
     };
 
     initialState = {
@@ -32,7 +32,7 @@ export default class CashCheque extends React.Component {
 
     state = this.initialState;
 
-    requestCash = () => {
+    requestCash() {
         const { ethereumInterface } = this.props;
         const { contract, beneficiary, amount, previousTotal, signature } = this.state;
 
@@ -40,7 +40,7 @@ export default class CashCheque extends React.Component {
             isInteractionWithEthereum : true
         } );
 
-        ethereumInterface
+        return ethereumInterface
             .cashCheque( contract, beneficiary, amount, previousTotal, signature )
             .then( result => {
                 this.setState( {
@@ -48,14 +48,18 @@ export default class CashCheque extends React.Component {
                     isInteractionWithEthereum : false
                 } );
             } )
-            .catch( error =>
+            .catch( error => {
                 this.setState( {
                     isInteractionWithEthereum : false,
                     metaMaskPromptIsAvailable : false,
                     hasCashedCheque : false,
                     error : error.message
-                } )
-            );
+                } );
+            } );
+    }
+
+    componentDidMount = () => {
+        SubscribeToEventMetaMaskSign.call( this );
     };
 
     onDropAttempt = callback => {
@@ -111,6 +115,7 @@ export default class CashCheque extends React.Component {
 
                 <Row className="ml-0 mr-0">
                     <SharingOptions
+                        shouldIncludeDownload={false}
                         shouldIncludeOwner={true}
                         shouldIncludeRecipient={true}
                         shouldIncludeSelf={true}
@@ -121,6 +126,8 @@ export default class CashCheque extends React.Component {
             </Fragment>
         );
     };
+
+    clearFiles = () => this.setState( { files : [], fileError : null } );
 
     render() {
         const {
@@ -140,13 +147,8 @@ export default class CashCheque extends React.Component {
         const requestIsPrimed = hasUploadedCheque;
 
         return (
-            <Page
-                columns="col-12 col-s-10 col-md-8 col-lg-6"
-                entranceAnimation={entranceAnimation}
-                pageIcon="hand-holding"
-                pageHeader="Cash cheque"
-            >
-                <h2 className="mt-2">Add the cheque you received</h2>
+            <Fragment>
+                <h2 className="mt-2">I want to cash a cheque</h2>
                 <hr className="mt-2 mb-4" />
 
                 {!isInteractionWithEthereum && (
@@ -192,8 +194,8 @@ export default class CashCheque extends React.Component {
                             abortLabel="Reset"
                             confirmationIcon="check"
                             abortIcon="undo"
-                            disabledAbort={false}
-                            disabled={!this.getRequestApproval() && !hasCashedCheque}
+                            abortIsDisabled={false}
+                            disabled={!this.getRequestApproval()}
                             delay={null}
                         />
                     </Row>
@@ -213,6 +215,7 @@ export default class CashCheque extends React.Component {
                             message="MetaMask input requested"
                             icon="key"
                             variant="info"
+                            messageIsBold={true}
                             dismissible={true}
                         />
                     </div>
@@ -227,13 +230,30 @@ export default class CashCheque extends React.Component {
                             icon="bug"
                             variant="danger"
                             dismissible={true}
+                            messageIsBold={true}
                             instruction="Please try again."
                         />
                     </div>
                 )}
 
-                {hasCashedCheque && this.sharer()}
-            </Page>
+                {hasCashedCheque && (
+                    <>
+                        {this.sharer()}
+
+                        <div className="alert-spacer">
+                            <AlertMessage
+                                style={{ width : "100%" }}
+                                intro="All done!"
+                                message="Cheque has been cashed!"
+                                icon="check-circle"
+                                variant="success"
+                                messageIsBold={true}
+                                dismissible={true}
+                            />
+                        </div>
+                    </>
+                )}
+            </Fragment>
         );
     }
 }

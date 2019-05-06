@@ -19,94 +19,73 @@ import "animate.css/source/attention_seekers/bounce.css";
 import "animate.css/source/attention_seekers/pulse.css";
 import "animate.css/source/fading_entrances/fadeIn.css";
 import "animate.css/source/fading_entrances/fadeInUp.css";
+import "animate.css/source/fading_entrances/fadeInDown.css";
 import "animate.css/source/fading_entrances/fadeInLeft.css";
 import "animate.css/source/fading_entrances/fadeInRight.css";
 import "animate.css/source/fading_exits/fadeOutDown.css";
 
 import {
-    //faSearch,
-    //faLink,
-    //faPen,
     faCheckCircle,
     faCheck,
     faCircle,
     faUser,
     faUserAstronaut,
     faSignInAlt,
-    //faRocket,
-    //faHashtag,
     faBug,
+    faTint,
     faHourglassHalf,
-    //faEnvelopeOpen,
+    faExclamationTriangle,
     faKey,
     faEnvelope,
-    //faEnvelopeOpenText,
     faTimesCircle,
-    //faFingerprint,
-    //faExclamationTriangle,
     faCoins,
     faUndo,
     faQuestionCircle,
     faQuestion,
-    //faCaretDown,
     faClock,
     faHandHolding,
-    //faMinus,
-    //faChevronDown,
     faExchangeAlt,
     faStar,
     faPlusCircle,
-    //faInfoCircle,
     faMoneyCheck,
     faFileSignature,
     faFileContract,
-    //faBookOpen,
     faWallet,
-    faSave
+    faSave,
+    faDownload
 } from "@fortawesome/free-solid-svg-icons";
 
 import { faEthereum } from "@fortawesome/free-brands-svg-icons";
 
 library.add(
-    //faSearch,
-    //faLink,
-    //faPen,
     faKey,
     faSignInAlt,
     faCheckCircle,
     faCheck,
+    faExclamationTriangle,
+    faTint,
     faHourglassHalf,
     faCircle,
-    //faRocket,
     faUser,
     faUserAstronaut,
     faQuestionCircle,
     faQuestion,
-    //faTimesCircle,
+    faTimesCircle,
     faExchangeAlt,
     faUndo,
     faClock,
     faHandHolding,
-    //faCaretDown,
-    //faInfoCircle,
-    //faFingerprint,
-    //faMinus,
-    //faChevronDown,
     faStar,
-    //faEnvelopeOpen,
     faEnvelope,
-    //faHashtag,
     faBug,
     faPlusCircle,
-    //faExclamationTriangle,
     faEthereum,
     faMoneyCheck,
     faCoins,
-    //faEnvelopeOpenText,
     faFileSignature,
     faFileContract,
-    //faBookOpen,
     faWallet,
+    faDownload,
     faSave
 );
 
@@ -120,9 +99,12 @@ import ReactDOM from "react-dom";
 // Routing
 import { Router as HashRouter } from "react-router-dom";
 //import { HashRouter } from "react-router-dom";
-import createHashHistory from "history/createHashHistory";
+//import createHashHistory from "history/createHashHistory";
+import { createBrowserHistory } from "history";
+import { ConnectedRouter, routerMiddleware } from "connected-react-router";
 
-const history = createHashHistory();
+//const history = createHashHistory();
+const history = createBrowserHistory();
 const MOUNT_NODE = document.getElementById("app");
 
 // The app
@@ -136,9 +118,25 @@ import ChequeBook from "./middleware/cheque_book";
 import Transactions from "./middleware/transactions";
 import Cheque from "./middleware/cheque";
 import SolCompiler from "./middleware/sol_compiler";
-import Etherscan from "./middleware/etherscan";
+import EtherScan from "./middleware/etherScan";
 import EthereumInterface from "./middleware/ethereum_interface";
 import Utils from "./middleware/utils";
+
+import thunk from "redux-thunk";
+import logger from "redux-logger";
+
+// Redux
+import { Provider } from "react-redux";
+import { createStore, applyMiddleware, compose } from "redux";
+
+import { mainReducer, defaultState, createRootReducer } from "./Reducer";
+const runDebug = process.env.NODE_ENV == "dev";
+const middleWare = [thunk, routerMiddleware(history), runDebug && logger].filter(Boolean);
+const store = createStore(
+    createRootReducer(history),
+    defaultState(),
+    compose(applyMiddleware(...middleWare))
+);
 
 /**
  * { Init }
@@ -180,7 +178,7 @@ function loadReact() {
         solCompiler,
         web3,
         config,
-        Etherscan,
+        EtherScan,
         ChequeBook,
         Transactions,
         Cheque,
@@ -189,9 +187,13 @@ function loadReact() {
     });
 
     ReactDOM.render(
-        <HashRouter history={history}>
-            <App history={history} config={config} ethereumInterface={ethereumInterface} />
-        </HashRouter>,
+        <Provider store={store}>
+            <ConnectedRouter history={history}>
+                {/*<HashRouter history={history}>*/}
+                <App history={history} config={config} ethereumInterface={ethereumInterface} />
+                {/*</HashRouter>*/}
+            </ConnectedRouter>
+        </Provider>,
         MOUNT_NODE
     );
 }

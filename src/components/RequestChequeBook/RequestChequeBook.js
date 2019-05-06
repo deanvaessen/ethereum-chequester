@@ -15,18 +15,22 @@ import {
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PropTypes from "prop-types";
-import AlertMessage from "../../components/AlertMessage";
-import FormSpacer from "../../components/FormSpacer";
-import ActionButtons from "../../components/ActionButtons";
-import Page from "../../components/Page";
+import AlertMessage from "../AlertMessage";
+import FormSpacer from "../FormSpacer";
+import ActionButtons from "../ActionButtons";
+import Page from "../Page";
 import SharingOptions from "../SharingOptions";
-import EthereumLoadingIndicator from "../../components/EthereumLoadingIndicator";
+import EthereumLoadingIndicator from "../EthereumLoadingIndicator";
+
+import { actionFetchChequeBooks, actionSetActiveChequeBook } from "../../Actions";
+
+import SubscribeToEventMetaMaskSign from "../Events/SignMetaMask";
 
 export default class RequestChequeBook extends React.Component {
     static propTypes = {
         ethereumInterface : PropTypes.object.isRequired,
-        selectChequeBook : PropTypes.func.isRequired,
-        getCurrentChequeBooks : PropTypes.func.isRequired
+        activeEthereumAddress : PropTypes.string,
+        knownChequeBooks : PropTypes.array.isRequired
     };
 
     initialState = {
@@ -44,18 +48,6 @@ export default class RequestChequeBook extends React.Component {
     }
 
     addListeners = () => {
-        window.addEventListener( "sign.shouldApprove", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : true
-            } );
-        } );
-
-        window.addEventListener( "sign.hasApproved", e => {
-            this.setState( {
-                metaMaskPromptIsAvailable : true
-            } );
-        } );
-
         window.addEventListener( "contract.shouldApprove", e => {
             this.setState( {
                 metaMaskPromptIsAvailable : true
@@ -67,6 +59,8 @@ export default class RequestChequeBook extends React.Component {
                 metaMaskPromptIsAvailable : false
             } );
         } );
+
+        SubscribeToEventMetaMaskSign.call( this );
     };
 
     getRequestApproval = () => {
@@ -85,8 +79,8 @@ export default class RequestChequeBook extends React.Component {
 
     requestChequeBook = () => {
         const { alias } = this.state;
-        const { ethereumInterface, getCurrentChequeBooks, selectChequeBook } = this.props;
-        const etherScanDelay = 15000; // @TODO: this is really stupid, but serves as a temporary quick hack to prevent an issue where there is a delay between transaction completion and when the result is available/queryable on Etherscan
+        const { ethereumInterface, activeEthereumAddress, knownChequeBooks, dispatch } = this.props;
+        const etherScanDelay = 15000; // @TODO: this is really stupid, but serves as a temporary quick hack to prevent an issue where there is a delay between transaction completion and when the result is available/queryable on EtherScan
 
         this.setState( {
             isInteractionWithEthereum : true
@@ -98,17 +92,18 @@ export default class RequestChequeBook extends React.Component {
                 const { _address } = deployedContract;
 
                 setTimeout( () => {
-                    getCurrentChequeBooks( x => {
-                        console.log( x );
-                        this.setState( {
-                            error : null,
-                            address : _address,
-                            metaMaskPromptIsAvailable : false,
-                            isInteractionWithEthereum : false
-                        } );
+                    actionFetchChequeBooks( dispatch, ethereumInterface )( activeEthereumAddress ).then(
+                        () => {
+                            this.setState( {
+                                error : null,
+                                address : _address,
+                                metaMaskPromptIsAvailable : false,
+                                isInteractionWithEthereum : false
+                            } );
 
-                        selectChequeBook( _address );
-                    } );
+                            actionSetActiveChequeBook( dispatch )( _address, knownChequeBooks );
+                        }
+                    );
                 }, etherScanDelay );
             } )
             .catch( err =>
@@ -241,7 +236,7 @@ export default class RequestChequeBook extends React.Component {
                         confirmationIcon="plus-circle"
                         abortIcon="undo"
                         disabled={!this.getRequestApproval()}
-                        disabledAbort={!address && !error}
+                        abortIsDisabled={!address && !error}
                         delay={null}
                     />
                 </Row>
@@ -258,6 +253,7 @@ export default class RequestChequeBook extends React.Component {
                             style={{ width : "100%" }}
                             intro="Please handle the prompt."
                             message="MetaMask input requested"
+                            messageIsBold={true}
                             icon="key"
                             delay="delay-1s"
                             variant="info"
@@ -274,6 +270,7 @@ export default class RequestChequeBook extends React.Component {
                             style={{ width : "100%" }}
                             intro="Oh no!"
                             message={error}
+                            messageIsBold={true}
                             delay="delay-1s"
                             icon="bug"
                             variant="danger"

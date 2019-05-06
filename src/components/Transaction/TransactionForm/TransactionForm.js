@@ -34,15 +34,17 @@ export default class TransactionForm extends React.Component {
 
         const { error, amount, isInteractionWithEthereum, metaMaskPromptIsAvailable } = this.state;
         const isLocked =
-            error || isInteractionWithEthereum || metaMaskPromptIsAvailable || !receiverAddress || !amount;
+            error ||
+            isInteractionWithEthereum ||
+            metaMaskPromptIsAvailable ||
+            !receiverAddress ||
+            !amount;
 
         return !isLocked;
     };
 
     render() {
-        const {
-            amount
-        } = this.state;
+        const { amount } = this.state;
 
         const {
             error,
@@ -56,7 +58,7 @@ export default class TransactionForm extends React.Component {
             actionButtonText,
             moneyHasBeenDeposited,
             isInteractionWithEthereum,
-            metaMaskPromptIsAvailable,
+            metaMaskPromptIsAvailable
         } = this.props;
 
         const capitalisedReceiver = receiverType.charAt( 0 ).toUpperCase() + receiverType.slice( 1 );
@@ -67,7 +69,7 @@ export default class TransactionForm extends React.Component {
                 <h5 className="mt-2">Transaction details</h5>
                 <hr className="mt-2 mb-2" />
 
-                { transactionDescription && <p className="mb-4">{transactionDescription}</p>}
+                {transactionDescription && <p className="mb-4">{transactionDescription}</p>}
 
                 <Form className="w-100 m-0 mt-2">
                     <Form.Row className="mt-2">
@@ -89,7 +91,7 @@ export default class TransactionForm extends React.Component {
                                     type="text"
                                     disabled={true}
                                     aria-label={`${capitalisedReceiver} address`}
-                                    placeholder={ `Select a ${receiverType} first` }
+                                    placeholder={`Select a ${receiverType} first`}
                                     aria-describedby="basic-addon2"
                                     name={`${capitalisedReceiver} address`}
                                     value={receiverAddress}
@@ -143,7 +145,7 @@ export default class TransactionForm extends React.Component {
                             abortLabel="Reset"
                             confirmationIcon={[ "fab", "ethereum" ]}
                             abortIcon="undo"
-                            disabledAbort={false}
+                            abortIsDisabled={false}
                             disabled={!this.getRequestApproval()}
                             delay={null}
                         />
@@ -162,6 +164,7 @@ export default class TransactionForm extends React.Component {
                             style={{ width : "100%" }}
                             intro="Please handle the prompt."
                             message="MetaMask input requested"
+                            messageIsBold={true}
                             icon="key"
                             variant="info"
                             dismissible={true}
@@ -175,6 +178,7 @@ export default class TransactionForm extends React.Component {
                             style={{ width : "100%" }}
                             intro="All good!"
                             message={successText}
+                            messageIsBold={true}
                             icon="check-circle"
                             variant="success"
                             dismissible={true}
@@ -188,6 +192,7 @@ export default class TransactionForm extends React.Component {
                             style={{ width : "100%" }}
                             intro="Oh no!"
                             message={error}
+                            messageIsBold={true}
                             icon="bug"
                             variant="danger"
                             dismissible={true}

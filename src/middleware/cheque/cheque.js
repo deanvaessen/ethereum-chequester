@@ -128,26 +128,48 @@ export default class Cheque {
      * @memberof Cheque
      */
     cash = contractInterface => {
-        return this.web3.eth
-            .getAccounts()
-            .then( accounts => accounts[0] )
-            .then( account => {
-                const { abi } = contractInterface;
+        return new Promise( ( resolve, reject ) => {
+            this.web3.eth
+                .getAccounts()
+                .then( accounts => accounts[0] )
+                .then( account => {
+                    const { abi } = contractInterface;
 
-                return {
-                    contract : new this.web3.eth.Contract( JSON.parse( abi ), this.contract ),
-                    account
-                };
-            } )
-            .then( result => {
-                const { contract, account } = result;
-                const { r, s, v } = this.getSignatureParameters();
-                const amountInWei = this.web3.utils.toWei( this.amount.toString(), "ether" );
+                    return {
+                        contract : new this.web3.eth.Contract( JSON.parse( abi ), this.contract ),
+                        account
+                    };
+                } )
+                .then( result => {
+                    const { contract, account } = result;
+                    const { r, s, v } = this.getSignatureParameters();
+                    const amountInWei = this.web3.utils.toWei( this.amount.toString(), "ether" );
 
-                return contract.methods
-                    .cash( this.beneficiary, amountInWei, v, r, s )
-                    .send( { from : account } );
-            } );
+                    window.dispatchEvent( new Event( "sign.shouldApprove" ) );
+
+                    return contract.methods
+                        .cash( this.beneficiary, amountInWei, v, r, s )
+                        .send( { from : account } )
+                        .on( "transactionHash", () =>
+                            window.dispatchEvent( new Event( "sign.hasApproved" ) )
+                        )
+                        .on( "receipt", receipt => {
+                            const { status } = receipt;
+
+                            if ( status == "0x0" ) {
+                                reject(
+                                    Error(
+                                        "The cheque could not be cashed, please check your transaction in MetaMask"
+                                    )
+                                );
+                            } else {
+                                resolve( "Execution worked fine!" );
+                            }
+                        } )
+                        .on( "error", reject );
+                } )
+                .catch( reject );
+        } );
     };
 
     /**

@@ -1,6 +1,5 @@
-export default function makeDeposit( amount ) {
-    const { getCurrentChequeBooks, ethereumInterface, receiverAddress } = this.props;
-    const etherScanDelay = 5000; // @TODO: this is really stupid, but serves as a temporary quick hack to prevent an issue where there is a delay between transaction completion and when the result is available/queryable on Etherscan
+export default function directTransaction( amount ) {
+    const { ethereumInterface, receiverAddress } = this.props;
 
     this.setState( {
         moneyHasBeenDeposited : false,
@@ -10,14 +9,10 @@ export default function makeDeposit( amount ) {
     ethereumInterface
         .sendFunds( amount, receiverAddress )
         .then( result => {
-            setTimeout( () => {
-                getCurrentChequeBooks( () => {
-                    this.setState( {
-                        moneyHasBeenDeposited : true,
-                        isInteractionWithEthereum : false
-                    } );
-                } );
-            }, etherScanDelay );
+            this.setState( {
+                moneyHasBeenDeposited : true,
+                isInteractionWithEthereum : false
+            } );
         } )
         .catch( error =>
             this.setState( {

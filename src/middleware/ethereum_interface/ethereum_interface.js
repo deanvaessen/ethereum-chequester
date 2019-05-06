@@ -9,7 +9,7 @@ export default class EthereumInterface {
      * @param {object} utils - Initialised utils middleware
      * @param {object} ChequeBook - The cheque book middleware
      * @param {object} Cheque - The cheque middleware
-     * @param {object} Etherscan - Etherscan middleware
+     * @param {object} EtherScan - EtherScan middleware
      * @param {object} solCompiler - Initialised solCompiler middleware
      * @param {string} path - Path npm module
      * @param {string} config - Application config
@@ -18,7 +18,7 @@ export default class EthereumInterface {
         this.web3 = dependencies.web3;
         this.path = dependencies.path;
         this.utils = dependencies.utils;
-        this.Etherscan = dependencies.Etherscan;
+        this.EtherScan = dependencies.EtherScan;
         this.transactions = new dependencies.Transactions( this.web3, this.path );
         this.ChequeBook = dependencies.ChequeBook;
         this.Cheque = dependencies.Cheque;
@@ -53,7 +53,12 @@ export default class EthereumInterface {
      * @memberof EthereumInterface
      */
     requestChequeBook = alias => {
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions );
+        const chequeBook = new this.ChequeBook(
+            this.solCompiler,
+            this.web3,
+            this.path,
+            this.transactions
+        );
 
         return chequeBook.request( alias );
     };
@@ -68,7 +73,13 @@ export default class EthereumInterface {
      * @memberof EthereumInterface
      */
     depositIntoChequeBook = ( amount, contract ) => {
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions, contract );
+        const chequeBook = new this.ChequeBook(
+            this.solCompiler,
+            this.web3,
+            this.path,
+            this.transactions,
+            contract
+        );
 
         return chequeBook.deposit( amount );
     };
@@ -81,7 +92,7 @@ export default class EthereumInterface {
      */
     sendFunds = ( amount, receiverAddress ) => {
         return this.transactions.deposit( amount, receiverAddress );
-    }
+    };
 
     /**
      * Gets all the cheque books for a user
@@ -91,14 +102,19 @@ export default class EthereumInterface {
      */
     getUserChequeBooks = account => {
         const { ETHERSCAN_API_KEY, ETHERSCAN_NETWORK } = this.config;
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions );
-        const etherscan = new this.Etherscan( ETHERSCAN_NETWORK, ETHERSCAN_API_KEY );
+        const chequeBook = new this.ChequeBook(
+            this.solCompiler,
+            this.web3,
+            this.path,
+            this.transactions
+        );
+        const etherScan = new this.EtherScan( ETHERSCAN_NETWORK, ETHERSCAN_API_KEY );
 
         return new Promise( async ( resolve, reject ) => {
             try {
                 const { abi, bytecode } = await chequeBook.getInterface();
 
-                etherscan
+                etherScan
                     .getChequeBookContractCreationTransactions( { abi, bytecode }, account )
                     .then( chequeBooks => Promise.all( chequeBook.addBalances( chequeBooks ) ) )
                     .then( chequeBooks => Promise.all( chequeBook.addAliases( chequeBooks, abi ) ) )
@@ -162,7 +178,12 @@ export default class EthereumInterface {
      * @memberof EthereumInterface
      */
     cashCheque = ( contract, beneficiary, amount, previousTotal, signature ) => {
-        const chequeBook = new this.ChequeBook( this.solCompiler, this.web3, this.path, this.transactions );
+        const chequeBook = new this.ChequeBook(
+            this.solCompiler,
+            this.web3,
+            this.path,
+            this.transactions
+        );
         const cheque = new this.Cheque(
             this.web3,
             this.utils,
@@ -175,8 +196,6 @@ export default class EthereumInterface {
 
         //prettier-ignore
         return chequeBook.getInterface()
-            .then( contractInterface => {
-                return cheque.cash( contractInterface );
-            } );
+            .then( contractInterface => cheque.cash( contractInterface ) );
     };
 }

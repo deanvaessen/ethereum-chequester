@@ -107,6 +107,19 @@ searchSelect:hover {
   border-color: darken($app-secondary-dark, 1%);
 }
 
+// SECONDARY - OUTLINED
+/*
+.btn.btn-outline-secondary:disabled {
+}
+
+.btn-outline-secondary {
+}
+*/
+
+.btn-outline-secondary:hover {
+  color: $ethereum-grey;
+}
+
 // DANGER
 .btn.btn-danger:disabled {
   background-color: $app-red-lighter;
